@@ -5,9 +5,7 @@ import { computed, onMounted } from 'vue'
 import AppHeader from '@/components/Layout/AppHeader.vue'
 import { useRoute } from 'vue-router'
 import Notification from '@/components/UI/Notification.vue'
-import { useNotification } from '@/composables/useNotification.ts'
 
-const { success } = useNotification()
 const { isAppReady, initApp } = useAppInit()
 const route = useRoute()
 

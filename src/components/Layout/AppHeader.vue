@@ -1,10 +1,21 @@
 <script setup lang="ts">
 import {useAuthStore} from "@/stores/auth.store";
 import {useRouter} from "vue-router";
+import { storeToRefs } from 'pinia'
+import { useUserStore } from '@/stores/user.store.ts'
+import { ref } from 'vue'
+import NewRecordModal from '@/components/UI/modal/NewRecordModal.vue'
 
 const router = useRouter()
 const authStore = useAuthStore()
-const {logout} = authStore
+const userStore = useUserStore()
+const { user } = storeToRefs(userStore)
+const { logout } = authStore
+const isNewRecordModalOpen = ref(false)
+
+const toggleNewRecordModal = () => {
+  isNewRecordModalOpen.value = !isNewRecordModalOpen.value
+}
 
 const LogOut = async () => {
   await logout()
@@ -14,11 +25,18 @@ const LogOut = async () => {
 
 <template>
   <div class="header">
-    <button class="exit-button" @click="LogOut">
-      <img src="/icons/exit.svg" alt="exit">
-      Выйти
-    </button>
+    <div class="buttons-header">
+      <button v-if="user && user.Group.name === 'Админ'" @click="toggleNewRecordModal" class="new-record">
+        <img src="/icons/add.svg" alt="add">
+        Новая запись
+      </button>
+      <button class="exit-button" @click="LogOut">
+        <img src="/icons/exit.svg" alt="exit">
+        Выйти
+      </button>
+    </div>
   </div>
+  <NewRecordModal :is-open="isNewRecordModalOpen" @close="isNewRecordModalOpen = false"/>
 </template>
 
 <style scoped lang="scss">
@@ -27,6 +45,7 @@ const LogOut = async () => {
   height: 80px;
   display: flex;
   justify-content: end;
+
   align-items: center;
   position: fixed;
   top: 0;
@@ -35,10 +54,13 @@ const LogOut = async () => {
 
   padding: 0 20px;
 }
-.exit-button{
+
+.buttons-header {
+  display: flex;
+  gap: 15px;
+}
+button {
   height: 40px;
-  padding: 0 25px;
-  background: rgba(gray, 0.3);
   color: black;
   font-size: 16px;
   display: flex;
@@ -46,9 +68,16 @@ const LogOut = async () => {
   justify-content: center;
   gap: 8px;
   opacity: 0.7;
-  border-radius: 32px;
   cursor: pointer;
 
+  width: 120px;
+  padding: 10px 20px;
+  background: rgba(gray, 0.2);
+  border-radius: 32px;
+
+  &.new-record {
+    width: fit-content;
+  }
   & > img {
     width: 16px;
     transform: translateY(1px);
@@ -58,4 +87,5 @@ const LogOut = async () => {
     opacity: 0.9;
   }
 }
+
 </style>

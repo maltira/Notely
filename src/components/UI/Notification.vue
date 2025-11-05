@@ -37,7 +37,7 @@ const handleClose = (id: number) => {
   z-index: 9999;
 }
 .notification {
-  width: 470px;
+  width: 570px;
   border-radius: 12px;
   background: white;
   border: 1px solid rgba(gray, 0.2);
@@ -94,7 +94,7 @@ const handleClose = (id: number) => {
       font-size: 16px;
       line-height: 100%;
       font-style: normal;
-      width: 305px;
+      width: 100%;
       opacity: 0.7;
     }
   }

@@ -46,6 +46,14 @@ class UserService {
     })
     return response.json()
   }
+
+  async deleteUser(userID: string): Promise<MessageResponse | ErrorResponse> {
+    const response = await fetch(`${this.baseURL}/user/${userID}`, {
+      method: 'DELETE',
+      credentials: 'include',
+    })
+    return response.json()
+  }
 }
 
 export const userService = new UserService()

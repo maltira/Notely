@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import {useAuthStore} from "@/stores/auth.store";
-import {AuthRequest} from "@/types/auth.entity";
+import type { AuthRequest } from "@/types/auth.entity";
 import {storeToRefs} from "pinia";
 import {useNotification} from "@/composables/useNotification";
 import {useRouter} from "vue-router";
@@ -51,7 +51,7 @@ const auth = async () => {
         <div class="input_item">
           <div class="password-input">
             <input id="password-input" name="password" v-model="password" autocomplete="off" required :type="isPasswordVisible ? 'text' : 'password'" placeholder="Введите пароль"/>
-            <img :src="isPasswordVisible ? '/icons/eye.svg' : '/icons/eye-closed.svg'" alt="visible" @click="isPasswordVisible = !isPasswordVisible">
+            <img :src="isPasswordVisible ? '/icons/eye-closed.svg' : '/icons/eye.svg'" alt="visible" @click="isPasswordVisible = !isPasswordVisible">
           </div>
         </div>
       </div>

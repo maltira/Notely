@@ -70,7 +70,9 @@ input, textarea, button, select {
   color: inherit;
   background-color: transparent;
 }
-
+button {
+  font-weight: 500;
+}
 input::-ms-clear {
   display: none;
 }

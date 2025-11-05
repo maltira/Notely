@@ -1,24 +1,46 @@
 <script setup lang="ts">
-import {useUserStore} from "@/stores/user.store";
-import {onMounted, onUnmounted, ref} from "vue";
-import {storeToRefs} from "pinia";
-import {useNotification} from "@/composables/useNotification";
+import { useUserStore } from '@/stores/user.store'
+import { onMounted, onUnmounted, ref } from 'vue'
+import { storeToRefs } from 'pinia'
+import { useNotification } from '@/composables/useNotification'
 import { formatDate } from '@/utils/date_format.ts'
-import Spinner from "@/components/UI/Spinner.vue"
-import {UpdatedUser, UserEntity} from "@/types/user.entity";
+import Spinner from '@/components/UI/Spinner.vue'
+import type { UpdatedUser, UserEntity } from '@/types/user.entity.ts'
+import DeleteModal from '@/components/UI/modal/DeleteModal.vue'
+import EditModal from '@/components/UI/modal/EditModal.vue'
 
 const users = ref<UserEntity[]>([])
 const userStore = useUserStore()
-const {user, isLoading, error} = storeToRefs(userStore)
-const { fetchAllUsers, updateUser } = userStore
+const { user, isLoading, error } = storeToRefs(userStore)
+const { fetchAllUsers, updateUser, deleteUser } = userStore
 const { success, err } = useNotification()
 const openStatusSelect = ref<number | null>(null)
+
+const isEditModalOpen = ref(false)
+const isDeleteModalOpen = ref(false)
+const userDeleting = ref<UserEntity | null>(null)
+const userEditing = ref<UserEntity | null>(null)
+
+const toggleDeleteModal = (user: UserEntity) => {
+  isDeleteModalOpen.value = !isDeleteModalOpen.value
+
+  if (isDeleteModalOpen.value) {
+    userDeleting.value = user
+  }
+}
+
+const toggleEditModal = (user: UserEntity) => {
+  isEditModalOpen.value = !isEditModalOpen.value
+
+  if (isEditModalOpen.value) {
+    userEditing.value = user
+  }
+}
 
 const changeStatusSelect = (index: number) => {
   if (openStatusSelect.value === index) {
     openStatusSelect.value = null
-  }
-  else {
+  } else {
     openStatusSelect.value = index
   }
 }
@@ -26,19 +48,35 @@ const changeStatusSelect = (index: number) => {
 const changeUserStatus = async (userID: string, is_block: boolean) => {
   const newUser: UpdatedUser = {
     id: userID,
-    is_block: is_block
+    is_block: is_block,
   }
   await updateUser(newUser)
 
   if (error.value) {
-    err("Ошибка обновления пользователя", error.value.toString())
+    err('Ошибка обновления пользователя', error.value.toString())
   } else {
     const usrIdx = users.value.findIndex((e) => e.id === userID)
-    users.value[usrIdx].is_block = is_block
+    if (usrIdx !== -1) {
+      users.value[usrIdx]!.is_block = is_block
+    }
     openStatusSelect.value = null
-    success("Пользователь обновлен", `Вы изменили данные у пользователя с ID: ${userID}`)
+    success('Пользователь обновлен', `Вы изменили данные у пользователя с ID: ${userID}`)
   }
 }
+
+const deleteUserByID = async (id: string) => {
+  await deleteUser(id)
+
+  if (error.value) {
+    err('Ошибка удаления пользователя', error.value.toString())
+  }
+  else {
+    users.value = users.value.filter((e) => e.id !== id)
+    isDeleteModalOpen.value = false
+    success('Пользователь удалён', `Вы удалили пользователя с ID: ${id}`)
+  }
+}
+
 // Закрытие при клике вне компонента
 const handleClickOutside = (event: MouseEvent) => {
   const target = event.target as HTMLElement
@@ -51,12 +89,13 @@ onMounted(async () => {
   document.addEventListener('click', handleClickOutside)
   const list = await fetchAllUsers()
   if (error.value) {
-    err("Ошибка получения пользователей", error.value.toString())
+    err('Ошибка получения пользователей', error.value.toString())
   } else {
-    const sortedUsers = [...list].sort((a, b) =>
-        a.Group.name.localeCompare(b.Group.name)
-    );
-    users.value = sortedUsers
+    if (list && list.length > 0) {
+      users.value = [...list].sort((a, b) => a.Group.name.localeCompare(b.Group.name))
+    } else {
+      users.value = []
+    }
   }
 })
 
@@ -67,46 +106,79 @@ onUnmounted(() => {
 
 <template>
   <div class="home_page">
-    <Spinner v-if="isLoading"/>
+    <Spinner v-if="isLoading" />
     <table v-if="!error && !isLoading && users.length > 0">
-      <tr class="main-row">
-        <td>ID</td>
-        <td>Имя</td>
-        <td>Email</td>
-        <td>Группа</td>
-        <td>Статус</td>
-        <td>Последнее посещение</td>
-      </tr>
-      <tr v-for="(usr, i) in users" :key="i">
-        <td>{{usr.id}}</td>
-        <td>{{usr.name}}</td>
-        <td>{{usr.email}}</td>
-        <td>{{usr.Group.name}}</td>
-        <td class="td-status">
-          <button :class="{'disabled': user.Group.name !== 'Админ', 'block': usr.is_block, 'active-status': openStatusSelect === i}" @click="changeStatusSelect(i)">
-            {{usr.is_block ? "Заблокирован" : "Доступен"}}
-            <img src="/icons/arrow.svg" :class="{'disabled': user.Group.name !== 'Админ'}" alt="arrow" width="16px">
-          </button>
-          <div class="block-status" v-if="openStatusSelect === i" @click.stop>
-            <p :class="{'selected': usr.is_block}" @click="usr.is_block ? null : changeUserStatus(usr.id, true)">Заблокирован</p>
-            <p :class="{'selected': !usr.is_block}" @click="usr.is_block ? changeUserStatus(usr.id, false) : null">Доступен</p>
-          </div>
-        </td>
-        <td>{{formatDate(usr.last_visit_at, 'DD/MM/YYYY HH:mm')}}</td>
-      </tr>
+      <thead>
+        <tr class="main-row">
+          <td>ID</td>
+          <td>Имя</td>
+          <td>Email</td>
+          <td>Группа</td>
+          <td>Статус</td>
+          <td>Последнее посещение</td>
+          <td v-if="user && user.Group.name === 'Админ'"></td>
+          <td v-if="user && user.Group.name === 'Админ'"></td>
+        </tr>
+      </thead>
+      <tbody>
+        <tr v-for="(usr, i) in users" :key="i">
+          <td>{{ usr.id }}</td>
+          <td>{{ usr.name }}</td>
+          <td>{{ usr.email }}</td>
+          <td>{{ usr.Group.name }}</td>
+          <td class="td-status">
+            <button
+              :class="{
+                disabled: user && user.Group.name !== 'Админ',
+                block: usr.is_block,
+                'active-status': openStatusSelect === i,
+              }"
+              @click="changeStatusSelect(i)"
+            >
+              {{ usr.is_block ? 'Заблокирован' : 'Доступен' }}
+              <img
+                src="/icons/arrow.svg"
+                :class="{ disabled: user && user.Group.name !== 'Админ' }"
+                alt="arrow"
+                width="16px"
+              />
+            </button>
+            <div class="block-status" v-if="openStatusSelect === i" @click.stop>
+              <p
+                :class="{ selected: usr.is_block }"
+                @click="usr.is_block ? null : changeUserStatus(usr.id, true)"
+              >
+                Заблокирован
+              </p>
+              <p
+                :class="{ selected: !usr.is_block }"
+                @click="usr.is_block ? changeUserStatus(usr.id, false) : null"
+              >
+                Доступен
+              </p>
+            </div>
+          </td>
+          <td>{{ formatDate(usr.last_visit_at, 'DD/MM/YYYY HH:mm') }}</td>
+          <td v-if="user && user.Group.name === 'Админ'" class="action"><img @click="toggleEditModal(usr)" src="/icons/edit.svg" alt="edit"></td>
+          <td v-if="user && user.Group.name === 'Админ'" class="action" ><img @click="toggleDeleteModal(usr)" src="/icons/delete.svg" alt="del"></td>
+        </tr>
+      </tbody>
     </table>
   </div>
+
+  <DeleteModal :is-open="isDeleteModalOpen" :user="userDeleting" :on-user-delete="deleteUserByID" @close="isDeleteModalOpen = false"/>
+  <EditModal :is-open="isEditModalOpen" :user="userEditing" @close="isEditModalOpen = false"/>
 </template>
 
 <style scoped lang="scss">
-.home_page{
+.home_page {
   margin-top: 80px;
   padding: 50px 20px;
 }
 table {
   width: 100%;
-  & > tr {
-    &.main-row{
+  & > thead > tr, & > tbody > tr {
+    &.main-row {
       & > td {
         font-weight: 500;
         padding: 10px;
@@ -116,11 +188,13 @@ table {
       font-size: 16px;
       padding: 10px;
 
-      &.td-status{
+      &.td-status {
         position: relative;
+        width: 1%;
+        white-space: nowrap;
         & > button {
           display: flex;
-          width: calc(100% - 30px);
+          width: 250px;
           justify-content: space-between;
           align-items: center;
           border-radius: 32px;
@@ -143,14 +217,14 @@ table {
               display: none;
             }
           }
-          &:hover{
+          &:hover {
             opacity: 0.8;
           }
-          &.active-status{
+          &.active-status {
             opacity: 0.8;
             z-index: 4;
           }
-          &.disabled{
+          &.disabled {
             pointer-events: none;
             justify-content: start;
           }
@@ -162,7 +236,7 @@ table {
           position: absolute;
           background: #f5f5f5;
           top: 50px;
-          width: calc(100% - 30px);
+          width: 250px;
           border-radius: 12px;
           z-index: 3;
 
@@ -172,11 +246,11 @@ table {
             padding: 15px 20px;
             opacity: 0.8;
             cursor: pointer;
-            &.selected{
+            &.selected {
               opacity: 0.3;
               pointer-events: none;
             }
-            &:hover{
+            &:hover {
               opacity: 1;
               background: rgba(gray, 0.1);
             }
@@ -190,4 +264,17 @@ table, th, td {
   border: 1px solid rgba(gray, 0.1);
 }
 
+.action {
+  text-align: center;
+
+  & > img {
+    cursor: pointer;
+    width: 20px;
+    opacity: 0.7;
+
+    &:hover{
+      opacity: 0.9;
+    }
+  }
+}
 </style>

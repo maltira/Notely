@@ -118,7 +118,29 @@ export const useUserStore = defineStore('user', {
         this.error = null
 
         const response: MessageResponse | ErrorResponse = await userService.updateUser(req)
-        console.log(response)
+
+        if (isErrorResponse(response)) {
+          this.error = response.error
+          return null
+        }
+        return true
+      }
+      catch {
+        this.error = 'Ошибка обновления пользователя, повторите попытку'
+        return null
+      }
+      finally {
+        this.isLoading = false
+      }
+    },
+
+    async deleteUser(userID: string): Promise<boolean | null > {
+      try {
+        this.isLoading = true
+        this.error = null
+
+        const response: MessageResponse | ErrorResponse = await userService.deleteUser(userID)
+
         if (isErrorResponse(response)) {
           this.error = response.error
           return null
@@ -126,8 +148,8 @@ export const useUserStore = defineStore('user', {
 
         return true
       }
-      catch (err) {
-        this.error = err.toString() || 'Ошибка обновления пользователя, повторите попытку'
+      catch {
+        this.error = 'Ошибка удаления пользователя, повторите попытку'
         return null
       }
       finally {
