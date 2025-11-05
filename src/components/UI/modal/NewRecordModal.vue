@@ -1,21 +1,55 @@
 <script setup lang="ts">
 
-import { watch } from 'vue'
+import { computed, ref, watch } from 'vue'
+import { storeToRefs } from 'pinia'
+import { useUserStore } from '@/stores/user.store.ts'
+import Spinner from '@/components/UI/Spinner.vue'
+import type { CreateUserRequest } from '@/types/user.entity.ts'
+
+const userStore = useUserStore()
+const { isLoading } = storeToRefs(userStore)
 
 interface Props {
   isOpen: boolean,
+  createUser: (req: CreateUserRequest) => Promise<void>,
 }
 const props = defineProps<Props>()
 
 // обращение к родителю
 const emit = defineEmits<{ close: [] }>()
 const handleClose = () => {
+  email.value = ''
+  name.value = ''
+  password.value = ''
+  group.value = ''
   emit('close')
 }
+
+const name = ref("")
+const email = ref("")
+const password = ref("")
+const group = ref("")
+const isPasswordVisible = ref(false)
 
 const handleKeydown = (event: KeyboardEvent) => {
   if (event.key === 'Escape' && props.isOpen) {
     handleClose()
+  }
+}
+
+const isCreateAvailable = computed(() => {
+  return name.value != "" && email.value != "" && password.value != "" && group.value != ""
+})
+
+const CreateUser = async () => {
+  if (isCreateAvailable) {
+    const req: CreateUserRequest = {
+      email: email.value,
+      name: name.value,
+      password: password.value,
+      group_id: group.value,
+    }
+    await props.createUser(req)
   }
 }
 
@@ -39,8 +73,20 @@ watch(() => props.isOpen, (newValue) => {
         <h1>Добавить новую запись</h1>
         <p>Укажите данные для создания новой записи в базе данных</p>
       </div>
+      <div class="modal-body">
+        <input v-model="name" required type="text" placeholder="Введите имя">
+        <input v-model="email" required type="email" placeholder="Введите email">
+        <div class="password-input">
+          <input v-model="password" required :type="isPasswordVisible ? 'text' : 'password'" placeholder="Введите пароль">
+          <img :src="isPasswordVisible ? '/icons/eye-closed.svg' : '/icons/eye.svg'" alt="visible" @click="isPasswordVisible = !isPasswordVisible">
+        </div>
+        <input v-model="group" required type="text" placeholder="Выберите группу">
+      </div>
       <div class="modal-actions">
-        <button class="submit_action">Добавить</button>
+        <button class="submit_action" @click="CreateUser" :class="{'disabled': !isCreateAvailable || isLoading}">
+          {{!isLoading ? "Добавить" : ""}}
+          <Spinner size="small" v-if="isLoading"/>
+        </button>
         <button class="cancel_action" @click="handleClose">Отмена</button>
       </div>
     </div>
@@ -74,7 +120,7 @@ watch(() => props.isOpen, (newValue) => {
 .modal-content {
   display: flex;
   flex-direction: column;
-  gap: 50px;
+  gap: 35px;
   background: $white-primary;
   width: 500px;
   position: relative;
@@ -85,7 +131,7 @@ watch(() => props.isOpen, (newValue) => {
   & > .modal-header{
     display: flex;
     flex-direction: column;
-    gap: 20px;
+    gap: 10px;
     & > h1 {
       font-size: 24px;
       text-align: center;
@@ -109,6 +155,10 @@ watch(() => props.isOpen, (newValue) => {
         color: $white-primary;
         background-color: $black-primary;
 
+        &.disabled {
+          opacity: 0.2;
+          pointer-events: none;
+        }
         &:hover{
           opacity: 0.9;
         }
@@ -121,6 +171,35 @@ watch(() => props.isOpen, (newValue) => {
         &:hover{
           opacity: 1;
         }
+      }
+    }
+  }
+}
+.modal-body{
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+
+  & > input, & > div > input {
+    width: 100%;
+    height: 48px;
+    padding: 0 15px;
+    border-radius: 12px;
+    background: rgba(gray, 0.1);
+  }
+  & > .password-input{
+    position: relative;
+    & > img {
+      position: absolute;
+      right: 15px;
+      top: 50%;
+      transform: translateY(-50%);
+      cursor: pointer;
+      z-index: 2;
+      opacity: 0.5;
+
+      &:hover{
+        opacity: 0.7;
       }
     }
   }

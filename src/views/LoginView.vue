@@ -56,7 +56,7 @@ const auth = async () => {
         </div>
       </div>
       <button class="login_submit" @click="auth" :class="{'disabled': !email || !password || isLoading}">
-        Войти
+        {{isLoading ? "" : "Войти"}}
         <Spinner size="small" v-if="isLoading"/>
       </button>
     </div>

@@ -5,13 +5,18 @@ import { storeToRefs } from 'pinia'
 import { useUserStore } from '@/stores/user.store.ts'
 import { ref } from 'vue'
 import NewRecordModal from '@/components/UI/modal/NewRecordModal.vue'
+import type { CreateUserRequest } from '@/types/user.entity.ts'
+import { useNotification } from '@/composables/useNotification.ts'
 
 const router = useRouter()
 const authStore = useAuthStore()
 const userStore = useUserStore()
-const { user } = storeToRefs(userStore)
+const { user, error } = storeToRefs(userStore)
 const { logout } = authStore
+const { createUser, fetchAllUsers } = userStore
+
 const isNewRecordModalOpen = ref(false)
+const { success, err } = useNotification()
 
 const toggleNewRecordModal = () => {
   isNewRecordModalOpen.value = !isNewRecordModalOpen.value
@@ -20,6 +25,19 @@ const toggleNewRecordModal = () => {
 const LogOut = async () => {
   await logout()
   await router.push("/auth")
+}
+
+const createNewUser = async (req: CreateUserRequest) => {
+  await createUser(req)
+  if (error.value) {
+    err('Ошибка создания пользователя', error.value.toString())
+  }
+  else {
+    isNewRecordModalOpen.value = false
+    success("Успешная операция", "Вы добавили нового пользователя в базу данных")
+
+    await fetchAllUsers()
+  }
 }
 </script>
 
@@ -36,7 +54,7 @@ const LogOut = async () => {
       </button>
     </div>
   </div>
-  <NewRecordModal :is-open="isNewRecordModalOpen" @close="isNewRecordModalOpen = false"/>
+  <NewRecordModal :is-open="isNewRecordModalOpen" :create-user="createNewUser" @close="isNewRecordModalOpen = false"/>
 </template>
 
 <style scoped lang="scss">

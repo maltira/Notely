@@ -14,7 +14,12 @@ export interface UserEntity {
 
   Group: GroupEntity;
 }
-
+export interface CreateUserRequest {
+  name: string
+  email: string
+  password: string
+  group_id: string
+}
 export interface UpdatedUser {
   id: string
   name?: string

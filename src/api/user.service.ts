@@ -1,5 +1,5 @@
 import config from '@/config'
-import type {UpdatedUser, UserEntity} from '@/types/user.entity.ts'
+import type {CreateUserRequest, UpdatedUser, UserEntity} from '@/types/user.entity.ts'
 import type {ErrorResponse, MessageResponse} from '@/types/error.entity.ts'
 
 class UserService {
@@ -51,6 +51,15 @@ class UserService {
     const response = await fetch(`${this.baseURL}/user/${userID}`, {
       method: 'DELETE',
       credentials: 'include',
+    })
+    return response.json()
+  }
+
+  async createUser(req: CreateUserRequest): Promise<MessageResponse | ErrorResponse> {
+    const response = await fetch(`${this.baseURL}/user`, {
+      method: 'POST',
+      credentials: "include",
+      body: JSON.stringify(req),
     })
     return response.json()
   }

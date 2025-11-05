@@ -56,7 +56,7 @@ watch(() => props.isOpen, (newValue) => {
       </div>
       <div class="modal-actions">
         <button class="submit_action" :class="{'disabled': isLoading}" @click="onUserDelete(user!.id)">
-          Удалить
+          {{!isLoading ? "Удалить" : ""}}
           <Spinner size="small" v-if="isLoading"/>
         </button>
         <button class="cancel_action" @click="handleClose" >Отмена</button>
@@ -92,7 +92,7 @@ watch(() => props.isOpen, (newValue) => {
 .modal-content {
   display: flex;
   flex-direction: column;
-  gap: 50px;
+  gap: 35px;
   background: $white-primary;
   width: 500px;
   position: relative;

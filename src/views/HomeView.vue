@@ -9,9 +9,8 @@ import type { UpdatedUser, UserEntity } from '@/types/user.entity.ts'
 import DeleteModal from '@/components/UI/modal/DeleteModal.vue'
 import EditModal from '@/components/UI/modal/EditModal.vue'
 
-const users = ref<UserEntity[]>([])
 const userStore = useUserStore()
-const { user, isLoading, error } = storeToRefs(userStore)
+const { user, users, isLoading, error } = storeToRefs(userStore)
 const { fetchAllUsers, updateUser, deleteUser } = userStore
 const { success, err } = useNotification()
 const openStatusSelect = ref<number | null>(null)
@@ -54,7 +53,11 @@ const changeUserStatus = async (userID: string, is_block: boolean) => {
 
   if (error.value) {
     err('Ошибка обновления пользователя', error.value.toString())
-  } else {
+  }
+  else if (!users.value) {
+    err('Ошибка обновления пользователя', "Список пользователей пуст")
+  }
+  else {
     const usrIdx = users.value.findIndex((e) => e.id === userID)
     if (usrIdx !== -1) {
       users.value[usrIdx]!.is_block = is_block
@@ -69,6 +72,9 @@ const deleteUserByID = async (id: string) => {
 
   if (error.value) {
     err('Ошибка удаления пользователя', error.value.toString())
+  }
+  else if (!users.value) {
+    err('Ошибка удаления пользователя', "Список пользователей пуст")
   }
   else {
     users.value = users.value.filter((e) => e.id !== id)
@@ -87,15 +93,9 @@ const handleClickOutside = (event: MouseEvent) => {
 
 onMounted(async () => {
   document.addEventListener('click', handleClickOutside)
-  const list = await fetchAllUsers()
+  await fetchAllUsers()
   if (error.value) {
     err('Ошибка получения пользователей', error.value.toString())
-  } else {
-    if (list && list.length > 0) {
-      users.value = [...list].sort((a, b) => a.Group.name.localeCompare(b.Group.name))
-    } else {
-      users.value = []
-    }
   }
 })
 
@@ -107,7 +107,7 @@ onUnmounted(() => {
 <template>
   <div class="home_page">
     <Spinner v-if="isLoading" />
-    <table v-if="!error && !isLoading && users.length > 0">
+    <table v-if="!error && !isLoading && users && users.length > 0">
       <thead>
         <tr class="main-row">
           <td>ID</td>

@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import type {UpdatedUser, UserEntity} from '@/types/user.entity.ts'
+import type { CreateUserRequest, UpdatedUser, UserEntity } from '@/types/user.entity.ts'
 import type {ErrorResponse, MessageResponse} from '@/types/error.entity.ts'
 import { userService } from '@/api/user.service.ts'
 import { isErrorResponse } from '@/utils/response_type.ts'
@@ -8,6 +8,7 @@ import { isErrorResponse } from '@/utils/response_type.ts'
 export const useUserStore = defineStore('user', {
   state: () => ({
     user: null as UserEntity | null,
+    users: [] as UserEntity[] | null,
     isLoading: false,
     error: null as string | null,
   }),
@@ -100,6 +101,12 @@ export const useUserStore = defineStore('user', {
           this.error = response.error
           return null
         }
+        if (response.length > 0) {
+          this.users = [...response].sort((a, b) => a.Group.name.localeCompare(b.Group.name))
+        }
+        else {
+          this.users = null
+        }
 
         return response
       }
@@ -150,6 +157,29 @@ export const useUserStore = defineStore('user', {
       }
       catch {
         this.error = 'Ошибка удаления пользователя, повторите попытку'
+        return null
+      }
+      finally {
+        this.isLoading = false
+      }
+    },
+
+    async createUser(req: CreateUserRequest): Promise<boolean | null> {
+      try {
+        this.isLoading = true
+        this.error = null
+
+        const response: MessageResponse | ErrorResponse = await userService.createUser(req)
+
+        if (isErrorResponse(response)) {
+          this.error = response.error
+          return null
+        }
+
+        return true
+      }
+      catch {
+        this.error = 'Ошибка создания пользователя, повторите попытку'
         return null
       }
       finally {

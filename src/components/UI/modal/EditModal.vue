@@ -76,7 +76,7 @@ watch(() => props.isOpen, (newValue) => {
 .modal-content {
   display: flex;
   flex-direction: column;
-  gap: 50px;
+  gap: 35px;
   background: $white-primary;
   width: 500px;
   position: relative;
@@ -87,7 +87,7 @@ watch(() => props.isOpen, (newValue) => {
   & > .modal-header{
     display: flex;
     flex-direction: column;
-    gap: 20px;
+    gap: 10px;
     & > h1 {
       font-size: 24px;
       text-align: center;
