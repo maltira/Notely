@@ -3,6 +3,7 @@ import type { CreateUserRequest, UpdatedUser, UserEntity } from '@/types/user.en
 import type {ErrorResponse, MessageResponse} from '@/types/error.entity.ts'
 import { userService } from '@/api/user.service.ts'
 import { isErrorResponse } from '@/utils/response_type.ts'
+import { filterUsersArray } from '@/utils/filterUsersArray.ts'
 
 
 export const useUserStore = defineStore('user', {
@@ -11,21 +12,30 @@ export const useUserStore = defineStore('user', {
     users: [] as UserEntity[],
     isLoading: false,
     error: null as string | null,
-    searchQuery: null as string | null
+    searchQuery: null as string | null,
+    filterQuery: 'id' as 'id' | 'name' | 'email' | 'group' | 'status' | 'last_visit' | null,
   }),
   getters: {
     filteredUsers: (state) => {
-      if (!state.searchQuery)
+      if (!state.searchQuery) {
+        if (state.filterQuery) {
+          return filterUsersArray(state.users, state.filterQuery)
+        }
         return state.users
+      }
 
       const query = state.searchQuery.toLowerCase()
 
-      return state.users.filter(user =>
-        user.id.includes(query) ||
-        user.name.toLowerCase().includes(query) ||
-        user.email.toLowerCase().includes(query) ||
-        user.Group.name.toLowerCase().includes(query)
-      )
+      if (state.filterQuery) {
+        return filterUsersArray(state.users, state.filterQuery)
+      }
+      else
+        return state.users.filter(user =>
+          user.id.includes(query) ||
+          user.name.toLowerCase().includes(query) ||
+          user.email.toLowerCase().includes(query) ||
+          user.Group.name.toLowerCase().includes(query)
+        )
     }
   },
   actions: {
@@ -34,6 +44,9 @@ export const useUserStore = defineStore('user', {
     },
     setSearchQuery(query: string) {
       this.searchQuery = query
+    },
+    setFilterQuery(query: string) {
+      this.filterQuery = query
     },
 
     async fetchCurrentUser(): Promise<UserEntity | null> {

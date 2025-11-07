@@ -138,12 +138,42 @@ onUnmounted(() => {
     <table v-if="!error && !isLoading && filteredUsers && filteredUsers.length > 0">
       <thead>
         <tr class="main-row">
-          <td>ID</td>
-          <td>Имя</td>
-          <td>Email</td>
-          <td>Группа</td>
-          <td>Статус</td>
-          <td>Последнее посещение</td>
+          <td>
+            <button>
+              ID
+              <img src="/icons/arrow.svg" alt="arrow" width="16px" />
+            </button>
+          </td>
+          <td>
+            <button>
+              Имя
+              <img src="/icons/arrow.svg" alt="arrow" width="16px" />
+            </button>
+          </td>
+          <td>
+            <button>
+              Email
+              <img src="/icons/arrow.svg" alt="arrow" width="16px" />
+            </button>
+          </td>
+          <td>
+            <button>
+              Группа
+              <img src="/icons/arrow.svg" alt="arrow" width="16px" />
+            </button>
+          </td>
+          <td>
+            <button>
+              Статус
+              <img src="/icons/arrow.svg" alt="arrow" width="16px" />
+            </button>
+          </td>
+          <td>
+            <button>
+              Последнее посещение
+              <img src="/icons/arrow.svg" alt="arrow" width="16px" />
+            </button>
+          </td>
           <td v-if="user && user.Group.name === 'Админ'"></td>
           <td v-if="user && user.Group.name === 'Админ'"></td>
         </tr>
@@ -296,6 +326,28 @@ table {
             }
           }
         }
+      }
+    }
+  }
+  & > thead > tr > td > button {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    & > img {
+      transform: translateY(2px);
+      opacity: 0.5;
+    }
+
+    &:hover {
+      & > img {
+        opacity: 1;
+      }
+    }
+    &.active-filter{
+      & > img {
+        opacity: 1;
       }
     }
   }
