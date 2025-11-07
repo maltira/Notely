@@ -13,14 +13,12 @@ export function useAppInit() {
   const initApp = async (): Promise<void> => {
     try {
       const auth: AuthResponse | null = await authStore.checkAuth()
-      if (auth !== null && auth.user) {
-        userStore.setUser(auth.user)
-
-        authStore.isAuthenticated = true
-        await router.push("/")
+      if (auth === null || !auth.user) {
+        await router.push("/auth")
       }
       else {
-        await router.push("/auth")
+        userStore.setUser(auth.user)
+        authStore.isAuthenticated = true
       }
     }
     catch (error) {

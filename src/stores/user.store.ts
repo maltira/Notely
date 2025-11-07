@@ -13,21 +13,22 @@ export const useUserStore = defineStore('user', {
     isLoading: false,
     error: null as string | null,
     searchQuery: null as string | null,
-    filterQuery: 'id' as 'id' | 'name' | 'email' | 'group' | 'status' | 'last_visit' | null,
+    filterQuery: null as string | null,
   }),
   getters: {
     filteredUsers: (state) => {
       if (!state.searchQuery) {
-        if (state.filterQuery) {
-          return filterUsersArray(state.users, state.filterQuery)
-        }
-        return state.users
+        return filterUsersArray(state.users, state.filterQuery)
       }
 
       const query = state.searchQuery.toLowerCase()
-
       if (state.filterQuery) {
-        return filterUsersArray(state.users, state.filterQuery)
+        return filterUsersArray(state.users, state.filterQuery).filter(user =>
+            user.id.includes(query) ||
+            user.name.toLowerCase().includes(query) ||
+            user.email.toLowerCase().includes(query) ||
+            user.Group.name.toLowerCase().includes(query)
+        )
       }
       else
         return state.users.filter(user =>
@@ -45,7 +46,7 @@ export const useUserStore = defineStore('user', {
     setSearchQuery(query: string) {
       this.searchQuery = query
     },
-    setFilterQuery(query: string) {
+    setFilterQuery(query: string | null) {
       this.filterQuery = query
     },
 
@@ -153,7 +154,7 @@ export const useUserStore = defineStore('user', {
         this.error = null
 
         const response: MessageResponse | ErrorResponse = await userService.updateUser(req)
-        console.log(response)
+
         if (isErrorResponse(response)) {
           this.error = response.error
           return null

@@ -19,8 +19,8 @@ const handleClose = (id: number) => {
       <div class="not_info">
         <img v-if="notification.type != 'info'" :src="`/icons/check-${notification.type}.svg`" width="32px" alt="check">
         <div class="not_info__content">
-          <p class="title" :style="{color: theme === 'dark' ? 'black' : 'white'}">{{notification.title}}</p>
-          <p class="desc" :style="{color: theme === 'dark' ? 'black' : 'white'}">{{notification.description}}</p>
+          <p class="title">{{notification.title}}</p>
+          <p class="desc">{{notification.description}}</p>
         </div>
       </div>
       <div class="img-container" @click="handleClose(notification.id)">
@@ -94,6 +94,7 @@ const handleClose = (id: number) => {
 
     & > .title{
       font-weight: 500;
+      color: $black-primary;
     }
     & > .desc {
       font-size: 16px;
@@ -101,6 +102,7 @@ const handleClose = (id: number) => {
       font-style: normal;
       width: 100%;
       opacity: 0.7;
+      color: $black-primary;
     }
   }
 }

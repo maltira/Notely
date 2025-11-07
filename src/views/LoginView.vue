@@ -102,10 +102,6 @@ const auth = async () => {
     flex-direction: column;
     gap: 10px;
 
-    & > p {
-      font-size: 16px;
-    }
-
     & > input, .password-input > input {
       height: 48px;
       border-radius: 12px;
@@ -113,6 +109,7 @@ const auth = async () => {
       padding: 0 16px;
       background: $white-primary;
       border: 1px solid rgba(gray, 0.2);
+      color: $black-primary;
 
       &:focus{
         box-shadow: 0 0 8px 0 rgba(0, 95, 248, 0.2);

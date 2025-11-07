@@ -96,7 +96,7 @@ onMounted(() => {
       }"></div>
     </div>
     <div class="buttons-header">
-      <form autocomplete="off" @submit.prevent="handleSearch" class="search-record" @click="toggleSearch">
+      <form autocomplete="off" @submit.prevent="handleSearch" class="button search-record" @click="toggleSearch">
         <img :src=" theme === 'dark' ? '/icons/search-white.svg' : '/icons/search.svg'" alt="add">
         <input
           id="search-input"
@@ -108,11 +108,14 @@ onMounted(() => {
           v-model="search"
         >
       </form>
-      <button v-if="user && user.Group.name === 'Админ'" @click="toggleNewRecordModal" class="new-record">
+      <RouterLink to="/publications" class="button publics">
+        Публикации
+      </RouterLink>
+      <button v-if="user && user.Group.name === 'Админ'" @click="toggleNewRecordModal" class="button new-record">
         <img :src=" theme === 'dark' ? '/icons/add-white.svg' : '/icons/add.svg'" alt="add">
         Новая запись
       </button>
-      <button class="exit-button" @click="LogOut">
+      <button class="button exit-button" @click="LogOut">
         <img :src=" theme === 'dark' ? '/icons/exit-white.svg' : '/icons/exit.svg'" alt="exit">
         Выйти
       </button>
@@ -141,7 +144,7 @@ onMounted(() => {
   display: flex;
   gap: 15px;
 }
-button, form {
+.button, form {
   height: 40px;
   font-size: 16px;
   display: flex;
@@ -155,7 +158,12 @@ button, form {
   padding: 10px 20px;
   background: rgba(gray, 0.2);
   border-radius: 32px;
-
+  &.publics{
+    font-weight: 500;
+    width: fit-content;
+    padding-left: 25px;
+    padding-right: 25px;
+  }
   &.new-record {
     width: fit-content;
   }
@@ -173,7 +181,6 @@ button, form {
     width: 16px;
     transform: translateY(1px);
   }
-
   &:hover{
     opacity: 0.9;
   }

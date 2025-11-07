@@ -2,11 +2,21 @@ import { createRouter, createWebHistory } from 'vue-router'
 import type { RouteRecordRaw } from 'vue-router'
 import HomeView from '@/views/HomeView.vue'
 import LoginView from '@/views/LoginView.vue'
+import PublicationView from '@/views/PublicationsView.vue'
+
 const routes: RouteRecordRaw[] = [
   {
     path: '/',
     name: 'Home',
     component: HomeView,
+    meta: {
+      hideHeader: false,
+    }
+  },
+  {
+    path: '/publications',
+    name: 'Publications',
+    component: PublicationView,
     meta: {
       hideHeader: false,
     }

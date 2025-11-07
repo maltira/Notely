@@ -1,4 +1,10 @@
 <script setup lang="ts">
+import { useThemeStore } from '@/stores/theme.store.ts'
+import { storeToRefs } from 'pinia'
+
+const themeStore = useThemeStore()
+const { theme } = storeToRefs(themeStore)
+
 interface Props {
   size?: 'small' | 'medium'
 }
@@ -9,7 +15,10 @@ withDefaults(defineProps<Props>(), {
 
 <template>
   <div class="loading-screen" :class="size">
-    <div class="spinner"></div>
+    <div class="spinner" :style="{
+      border: size === 'small' && theme === 'dark' ? '3px solid rgba(black, 0.1)' : '3px solid rgba(white, 0.1)',
+      borderTop: size === 'small' && theme === 'dark' ? '3px solid black' : '3px solid white'
+    }"></div>
   </div>
 </template>
 
@@ -26,7 +35,7 @@ withDefaults(defineProps<Props>(), {
       width: 35px;
       height: 35px;
       border: 5px solid rgba(black, 0.1);
-      border-top: 5px solid black;
+      border-top: 5px solid var(--text-primary);
     }
   }
   &.small{

@@ -1,6 +1,6 @@
 import type { UserEntity } from '@/types/user.entity.ts'
 
-export const filterUsersArray = (arr: UserEntity[], type: 'id' | 'name' | 'email' | 'group' | 'status' | 'last_visit' = 'group'): UserEntity[] => {
+export const filterUsersArray = (arr: UserEntity[], type: string | null): UserEntity[] => {
   switch (type) {
     case "id":
       return [...arr].sort((a, b) => a.id.localeCompare(b.id))
@@ -13,7 +13,9 @@ export const filterUsersArray = (arr: UserEntity[], type: 'id' | 'name' | 'email
     case "status":
       return [...arr].sort((a, b) => Number(a.is_block) - Number(b.is_block))
     case "last_visit":
-      return [...arr].sort((a, b) => new Date(a.last_visit_at).getTime() - new Date(b.last_visit_at).getTime())
+      return [...arr].sort((a, b) => new Date(b.last_visit_at).getTime() - new Date(a.last_visit_at).getTime())
+    case null:
+      return arr
     default:
       return arr
   }

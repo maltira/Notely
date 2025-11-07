@@ -14,8 +14,8 @@ const themeStore = useThemeStore()
 const { theme } = storeToRefs(themeStore)
 
 const userStore = useUserStore()
-const { user, users, isLoading, error, filteredUsers, searchQuery } = storeToRefs(userStore)
-const { fetchAllUsers, updateUser, deleteUser, setSearchQuery } = userStore
+const { user, users, isLoading, error, filteredUsers, searchQuery, filterQuery } = storeToRefs(userStore)
+const { fetchAllUsers, updateUser, deleteUser, setSearchQuery, setFilterQuery } = userStore
 const { success, err } = useNotification()
 
 const openStatusSelect = ref<number | null>(null)
@@ -115,6 +115,14 @@ const handleClickOutside = (event: MouseEvent) => {
   }
 }
 
+const handleFilter = (type: string | null) => {
+  if (filterQuery.value === type) {
+    setFilterQuery(null)
+    return
+  }
+  setFilterQuery(type)
+}
+
 onMounted(async () => {
   document.addEventListener('click', handleClickOutside)
   await fetchAllUsers()
@@ -139,37 +147,37 @@ onUnmounted(() => {
       <thead>
         <tr class="main-row">
           <td>
-            <button>
+            <button @click="handleFilter('id')" :class="{'active-filter': filterQuery === 'id'}">
               ID
               <img src="/icons/arrow.svg" alt="arrow" width="16px" />
             </button>
           </td>
           <td>
-            <button>
+            <button @click="handleFilter('name')" :class="{'active-filter': filterQuery === 'name'}">
               Имя
               <img src="/icons/arrow.svg" alt="arrow" width="16px" />
             </button>
           </td>
           <td>
-            <button>
+            <button @click="handleFilter('email')" :class="{'active-filter': filterQuery === 'email'}">
               Email
               <img src="/icons/arrow.svg" alt="arrow" width="16px" />
             </button>
           </td>
           <td>
-            <button>
+            <button @click="handleFilter('group')" :class="{'active-filter': filterQuery === 'group'}">
               Группа
               <img src="/icons/arrow.svg" alt="arrow" width="16px" />
             </button>
           </td>
           <td>
-            <button>
+            <button @click="handleFilter('status')" :class="{'active-filter': filterQuery === 'status'}">
               Статус
               <img src="/icons/arrow.svg" alt="arrow" width="16px" />
             </button>
           </td>
           <td>
-            <button>
+            <button @click="handleFilter('last_visit')" :class="{'active-filter': filterQuery === 'last_visit'}">
               Последнее посещение
               <img src="/icons/arrow.svg" alt="arrow" width="16px" />
             </button>
@@ -337,7 +345,7 @@ table {
 
     & > img {
       transform: translateY(2px);
-      opacity: 0.5;
+      opacity: 0.2;
     }
 
     &:hover {
