@@ -6,6 +6,7 @@ import { useUserStore } from '@/stores/user.store.ts'
 import Spinner from '@/components/UI/Spinner.vue'
 import type { CreateUserRequest } from '@/types/user.entity.ts'
 import { useThemeStore } from '@/stores/theme.store.ts'
+import SelectRoleModal from '@/components/UI/modal/SelectRoleModal.vue'
 
 const themeStore = useThemeStore()
 const { theme } = storeToRefs(themeStore)
@@ -25,15 +26,27 @@ const handleClose = () => {
   email.value = ''
   name.value = ''
   password.value = ''
-  group.value = ''
+  groupID.value = '700c704d-f5c9-4a95-ad9e-c040b4429050'
+  groupName.value = 'Гость'
   emit('close')
 }
 
 const name = ref("")
 const email = ref("")
 const password = ref("")
-const group = ref("")
 const isPasswordVisible = ref(false)
+const groupID = ref('700c704d-f5c9-4a95-ad9e-c040b4429050')
+const groupName = ref('Гость')
+const isRoleModalOpen = ref(false)
+
+const toggleRoleModal = () => {
+  isRoleModalOpen.value = !isRoleModalOpen.value
+}
+const handleRoleUpdate = (id: string, name: string) => {
+  groupID.value = id
+  groupName.value = name
+  isRoleModalOpen.value = false
+}
 
 const handleKeydown = (event: KeyboardEvent) => {
   if (event.key === 'Escape' && props.isOpen) {
@@ -42,7 +55,7 @@ const handleKeydown = (event: KeyboardEvent) => {
 }
 
 const isCreateAvailable = computed(() => {
-  return name.value != "" && email.value != "" && password.value != "" && group.value != ""
+  return name.value != "" && email.value != "" && password.value != "" && groupID.value != ""
 })
 
 const CreateUser = async () => {
@@ -51,7 +64,7 @@ const CreateUser = async () => {
       email: email.value,
       name: name.value,
       password: password.value,
-      group_id: group.value,
+      group_id: groupID.value,
     }
     await props.createUser(req)
     handleClose()
@@ -83,9 +96,12 @@ watch(() => props.isOpen, (newValue) => {
         <input v-model="email" required type="email" placeholder="Введите email">
         <div class="password-input">
           <input v-model="password" required :type="isPasswordVisible ? 'text' : 'password'" placeholder="Введите пароль">
-          <img :src="isPasswordVisible ? '/icons/eye-closed.svg' : '/icons/eye.svg'" alt="visible" @click="isPasswordVisible = !isPasswordVisible">
+          <img :src="isPasswordVisible ? (theme == 'dark' ? '/icons/eye-closed-white.svg' : '/icons/eye-closed.svg') : (theme == 'dark' ? '/icons/eye-white.svg' : '/icons/eye.svg')" alt="visible" @click="isPasswordVisible = !isPasswordVisible">
         </div>
-        <input v-model="group" required type="text" placeholder="Выберите группу">
+        <button class="btn-select-role" @click="toggleRoleModal">
+          <span>{{groupName ? groupName : 'Выберите роль'}}</span>
+          <img :src="theme === 'dark' ? 'icons/edit-white.svg' : 'icons/edit.svg'" alt="edit" width="16px" />
+        </button>
       </div>
       <div class="modal-actions">
         <button
@@ -113,6 +129,8 @@ watch(() => props.isOpen, (newValue) => {
       </div>
     </div>
   </div>
+
+  <SelectRoleModal :is-open="isRoleModalOpen" :group="groupID" @close="isRoleModalOpen = false" @user-updated="handleRoleUpdate"/>
 </template>
 
 <style scoped lang="scss">
@@ -206,7 +224,7 @@ watch(() => props.isOpen, (newValue) => {
   flex-direction: column;
   gap: 10px;
 
-  & > input, & > div > input {
+  & > input, & > div > input, & > button {
     width: 100%;
     height: 48px;
     padding: 0 15px;
@@ -222,11 +240,23 @@ watch(() => props.isOpen, (newValue) => {
       transform: translateY(-50%);
       cursor: pointer;
       z-index: 2;
-      opacity: 0.5;
+      opacity: 0.3;
 
       &:hover{
-        opacity: 0.7;
+        opacity: 0.5;
       }
+    }
+  }
+  & > .btn-select-role {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    & > span, & > img {
+      font-weight: 400;
+    }
+
+    &:hover{
+      background: rgba(gray, 0.15);
     }
   }
 }

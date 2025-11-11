@@ -168,94 +168,96 @@ onUnmounted(() => {
       </button>
     </div>
     <Spinner v-if="isLoading" />
-    <table v-if="!error && !isLoading && filteredUsers && filteredUsers.length > 0">
-      <thead>
-      <tr class="main-row">
-        <td>
-          <button @click="handleFilter('id')" :class="{'active-filter': filterQuery === 'id'}">
-            ID
-            <img src="/icons/arrow.svg" alt="arrow" width="16px" />
-          </button>
-        </td>
-        <td>
-          <button @click="handleFilter('name')" :class="{'active-filter': filterQuery === 'name'}">
-            Имя
-            <img src="/icons/arrow.svg" alt="arrow" width="16px" />
-          </button>
-        </td>
-        <td>
-          <button @click="handleFilter('email')" :class="{'active-filter': filterQuery === 'email'}">
-            Email
-            <img src="/icons/arrow.svg" alt="arrow" width="16px" />
-          </button>
-        </td>
-        <td>
-          <button @click="handleFilter('group')" :class="{'active-filter': filterQuery === 'group'}">
-            Группа
-            <img src="/icons/arrow.svg" alt="arrow" width="16px" />
-          </button>
-        </td>
-        <td>
-          <button @click="handleFilter('status')" :class="{'active-filter': filterQuery === 'status'}">
-            Статус
-            <img src="/icons/arrow.svg" alt="arrow" width="16px" />
-          </button>
-        </td>
-        <td>
-          <button @click="handleFilter('last_visit')" :class="{'active-filter': filterQuery === 'last_visit'}">
-            Последнее посещение
-            <img src="/icons/arrow.svg" alt="arrow" width="16px" />
-          </button>
-        </td>
-        <td v-if="user && user.Group.name === 'Админ'"></td>
-        <td v-if="user && user.Group.name === 'Админ'"></td>
-      </tr>
-      </thead>
-      <tbody>
-      <tr v-for="(usr, i) in filteredUsers" :key="i">
-        <td>{{ usr.id }}</td>
-        <td>{{ usr.name }}</td>
-        <td>{{ usr.email }}</td>
-        <td>{{ usr.Group.name }}</td>
-        <td class="td-status">
-          <button
-            :class="{
+    <div v-if="!error && !isLoading && filteredUsers && filteredUsers.length > 0" class="table-container">
+      <table>
+        <thead>
+        <tr class="main-row">
+          <td>
+            <button @click="handleFilter('id')" :class="{'active-filter': filterQuery === 'id'}">
+              ID
+              <img :src="theme == 'dark' ? '/icons/arrow-white.svg' : '/icons/arrow.svg'" alt="arrow" width="12px" />
+            </button>
+          </td>
+          <td>
+            <button @click="handleFilter('name')" :class="{'active-filter': filterQuery === 'name'}">
+              Имя
+              <img :src="theme == 'dark' ? '/icons/arrow-white.svg' : '/icons/arrow.svg'" alt="arrow" width="12px" />
+            </button>
+          </td>
+          <td>
+            <button @click="handleFilter('email')" :class="{'active-filter': filterQuery === 'email'}">
+              Email
+              <img :src="theme == 'dark' ? '/icons/arrow-white.svg' : '/icons/arrow.svg'" alt="arrow" width="12px" />
+            </button>
+          </td>
+          <td>
+            <button @click="handleFilter('group')" :class="{'active-filter': filterQuery === 'group'}">
+              Группа
+              <img :src="theme == 'dark' ? '/icons/arrow-white.svg' : '/icons/arrow.svg'" alt="arrow" width="12px" />
+            </button>
+          </td>
+          <td>
+            <button @click="handleFilter('status')" :class="{'active-filter': filterQuery === 'status'}">
+              Статус
+              <img :src="theme == 'dark' ? '/icons/arrow-white.svg' : '/icons/arrow.svg'" alt="arrow" width="12px" />
+            </button>
+          </td>
+          <td>
+            <button @click="handleFilter('last_visit')" :class="{'active-filter': filterQuery === 'last_visit'}">
+              Последнее посещение
+              <img :src="theme == 'dark' ? '/icons/arrow-white.svg' : '/icons/arrow.svg'" alt="arrow" width="12px" />
+            </button>
+          </td>
+          <td v-if="user && user.Group.name === 'Админ'"></td>
+          <td v-if="user && user.Group.name === 'Админ'"></td>
+        </tr>
+        </thead>
+        <tbody>
+        <tr v-for="(usr, i) in filteredUsers" :key="i">
+          <td>{{ usr.id }}</td>
+          <td>{{ usr.name }}</td>
+          <td>{{ usr.email }}</td>
+          <td>{{ usr.Group.name }}</td>
+          <td class="td-status">
+            <button
+              :class="{
                 disabled: user && user.Group.name !== 'Админ',
                 block: usr.is_block,
                 'active-status': openStatusSelect === i,
                 'dark-theme': theme === 'dark'
               }"
-            @click="changeStatusSelect(i)"
-          >
-            {{ usr.is_block ? 'Заблокирован' : 'Доступен' }}
-            <img
-              src="/icons/arrow.svg"
-              :class="{ disabled: user && user.Group.name !== 'Админ' }"
-              alt="arrow"
-              width="16px"
-            />
-          </button>
-          <div class="block-status" v-if="openStatusSelect === i" @click.stop>
-            <p
-              :class="{ selected: usr.is_block }"
-              @click="usr.is_block ? null : changeUserStatus(usr.id, true)"
+              @click="changeStatusSelect(i)"
             >
-              Заблокирован
-            </p>
-            <p
-              :class="{ selected: !usr.is_block }"
-              @click="usr.is_block ? changeUserStatus(usr.id, false) : null"
-            >
-              Доступен
-            </p>
-          </div>
-        </td>
-        <td>{{ formatDate(usr.last_visit_at, 'DD/MM/YYYY HH:mm') }}</td>
-        <td v-if="user && user.Group.name === 'Админ'" class="action"><img @click="toggleEditModal(usr)" :src="theme === 'dark' ? '/icons/edit-white.svg' : '/icons/edit.svg'" alt="edit"></td>
-        <td v-if="user && user.Group.name === 'Админ'" class="action" ><img @click="toggleDeleteModal(usr)" :src="theme === 'dark' ? '/icons/delete-white.svg' : '/icons/delete.svg'" alt="del"></td>
-      </tr>
-      </tbody>
-    </table>
+              {{ usr.is_block ? 'Заблокирован' : 'Доступен' }}
+              <img
+                src="/icons/arrow.svg"
+                :class="{ disabled: user && user.Group.name !== 'Админ' }"
+                alt="arrow"
+                width="16px"
+              />
+            </button>
+            <div class="block-status" v-if="openStatusSelect === i" @click.stop>
+              <p
+                :class="{ selected: usr.is_block }"
+                @click="usr.is_block ? null : changeUserStatus(usr.id, true)"
+              >
+                Заблокирован
+              </p>
+              <p
+                :class="{ selected: !usr.is_block }"
+                @click="usr.is_block ? changeUserStatus(usr.id, false) : null"
+              >
+                Доступен
+              </p>
+            </div>
+          </td>
+          <td>{{ formatDate(usr.last_visit_at, 'DD/MM/YYYY HH:mm') }}</td>
+          <td v-if="user && user.Group.name === 'Админ'" class="action"><img @click="toggleEditModal(usr)" :src="theme === 'dark' ? '/icons/edit-white.svg' : '/icons/edit.svg'" alt="edit"></td>
+          <td v-if="user && user.Group.name === 'Админ'" class="action" ><img @click="toggleDeleteModal(usr)" :src="theme === 'dark' ? '/icons/delete-white.svg' : '/icons/delete.svg'" alt="del"></td>
+        </tr>
+        </tbody>
+      </table>
+    </div>
     <p v-else class="search-result-none">Ничего не найдено</p>
   </div>
 
@@ -269,18 +271,26 @@ onUnmounted(() => {
   margin-top: 80px;
   padding: 50px 50px;
 }
+
+.table-container{
+  padding: 15px;
+  border-radius: 16px;
+  background: rgba(gray, 0.05);
+  border: 1px solid rgba(gray, 0.2);
+}
 table {
   width: 100%;
   & > thead > tr, & > tbody > tr {
     &.main-row {
       & > td {
         font-weight: 500;
-        padding: 10px;
+        padding: 10px 10px 25px 10px;
       }
     }
     & > td {
       font-size: 16px;
       padding: 10px;
+      border-bottom: 1px solid rgba(gray, 0.1);
 
       &.td-status {
         position: relative;
@@ -303,8 +313,6 @@ table {
 
           &.dark-theme {
             opacity: 0.9;
-
-
           }
           &.block {
             background: #ffe4db;
@@ -313,7 +321,6 @@ table {
           & > img {
             opacity: 0.7;
             transform: translateY(2px);
-
             &.disabled {
               display: none;
             }
@@ -363,6 +370,11 @@ table {
       }
     }
   }
+  & > tbody > tr:last-child {
+    & > td {
+      border-bottom: none;
+    }
+  }
   & > thead > tr > td > button {
     width: 100%;
     display: flex;
@@ -385,9 +397,6 @@ table {
       }
     }
   }
-}
-table, th, td {
-  border: 1px solid rgba(gray, 0.1);
 }
 
 .action {

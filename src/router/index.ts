@@ -27,7 +27,7 @@ const routes: RouteRecordRaw[] = [
     }
   },
   {
-    path: '/auth',
+    path: '/login',
     name: 'Authorization',
     component: LoginView,
     meta: {

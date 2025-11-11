@@ -25,7 +25,7 @@ const isDarkTheme = ref(false)
 
 const LogOut = async () => {
   await logout()
-  await router.push("/auth")
+  await router.push("/login")
 }
 
 const toggleSearch = () => {

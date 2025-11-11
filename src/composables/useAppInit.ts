@@ -14,7 +14,7 @@ export function useAppInit() {
     try {
       const auth: AuthResponse | null = await authStore.checkAuth()
       if (auth === null || !auth.user) {
-        await router.push("/auth")
+        await router.push("/login")
       }
       else {
         userStore.setUser(auth.user)

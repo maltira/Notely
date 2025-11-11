@@ -6,6 +6,7 @@ import {storeToRefs} from "pinia";
 import {useNotification} from "@/composables/useNotification";
 import {useRouter} from "vue-router";
 import Spinner from '@/components/UI/Spinner.vue'
+import { useThemeStore } from '@/stores/theme.store.ts'
 
 const router = useRouter()
 const email = ref("")
@@ -15,6 +16,8 @@ const authStore = useAuthStore()
 const { isLoading, error } = storeToRefs(authStore)
 const { login } = authStore
 const { success, err } = useNotification()
+const themeStore = useThemeStore()
+const { theme } = storeToRefs(themeStore)
 
 const auth = async () => {
   if (email.value && password.value) {
@@ -45,14 +48,14 @@ const auth = async () => {
         <h1>Добро пожаловать в <span>Scribble</span>!</h1>
         <div class="registration">
           <p>Вы впервые здесь?</p>
-          <RouterLink to="/">Присоединиться</RouterLink>
+          <RouterLink to="/sign-up">Присоединиться</RouterLink>
         </div>
       </div>
       <div class="login_inputs">
         <input id="email-input" name="email" v-model="email" autocomplete="off" required type="email" placeholder="Введите email"/>
         <div class="password-input">
           <input id="password-input" name="password" v-model="password" autocomplete="off" required :type="isPasswordVisible ? 'text' : 'password'" placeholder="Введите пароль"/>
-          <img :src="isPasswordVisible ? '/icons/eye-closed.svg' : '/icons/eye.svg'" alt="visible" @click="isPasswordVisible = !isPasswordVisible">
+          <img :src="isPasswordVisible ? (theme == 'dark' ? '/icons/eye-closed-white.svg' : '/icons/eye-closed.svg') : (theme == 'dark' ? '/icons/eye-white.svg' : '/icons/eye.svg')"  alt="visible" @click="isPasswordVisible = !isPasswordVisible">
         </div>
       </div>
       <button class="login_submit" @click="auth" :class="{'disabled': !email || !password || isLoading}">
@@ -128,7 +131,7 @@ const auth = async () => {
       border-radius: 20px;
       font-size: 36px;
       font-weight: 700;
-
+      color: $white-primary;
       animation: scale-size 5s infinite linear alternate;
     }
   }
@@ -144,7 +147,7 @@ const auth = async () => {
 .login_inputs {
   display: flex;
   flex-direction: column;
-  gap: 25px;
+  gap: 15px;
 
   & > input, .password-input > input {
     height: 48px;
@@ -172,10 +175,10 @@ const auth = async () => {
     transform: translateY(-50%);
     cursor: pointer;
     z-index: 2;
-    opacity: 0.5;
+    opacity: 0.3;
 
     &:hover{
-      opacity: 0.7;
+      opacity: 0.5;
     }
   }
 }
@@ -191,6 +194,10 @@ const auth = async () => {
   gap: 15px;
   &:hover {
     background: rgba(#fff, 0.8);
+
+    .logotype{
+      opacity: 0;
+    }
   }
   &.disabled{
     opacity: 0.2;

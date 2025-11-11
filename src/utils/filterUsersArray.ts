@@ -13,7 +13,7 @@ export const filterUsersArray = (arr: UserEntity[], type: string | null): UserEn
     case "status":
       return [...arr].sort((a, b) => Number(a.is_block) - Number(b.is_block))
     case "last_visit":
-      return [...arr].sort((a, b) => new Date(b.last_visit_at).getTime() - new Date(a.last_visit_at).getTime())
+      return [...arr].sort((a, b) => new Date(a.last_visit_at).getTime() - new Date(b.last_visit_at).getTime())
     case null:
       return arr
     default:
