@@ -1,10 +1,5 @@
 <script setup lang="ts">
-import { useThemeStore } from '@/stores/theme.store.ts'
-import { storeToRefs } from 'pinia'
 import { computed } from 'vue'
-
-const themeStore = useThemeStore()
-const { theme } = storeToRefs(themeStore)
 
 interface Props {
   size?: 'small' | 'medium'
@@ -23,10 +18,6 @@ const computeBorder = computed(() => {
     else if (props.color === 'dark') {
       return '3px solid rgba(black, 0.1)'
     }
-
-    if (theme.value === 'dark')
-      return '3px solid rgba(black, 0.1)'
-    else return '3px solid rgba(white, 0.1)'
   }
 })
 
@@ -38,10 +29,6 @@ const computeBorderTop = computed(() => {
     if (props.color === 'dark') {
       return '3px solid black'
     }
-
-    if (theme.value === 'dark')
-      return '3px solid black'
-    else return '3px solid white'
   }
 })
 </script>
@@ -72,13 +59,13 @@ const computeBorderTop = computed(() => {
     }
   }
   &.small{
-    height: 25px !important;
+    height: 16px !important;
 
     & > .spinner {
-      width: 20px;
-      height: 20px;
-      border: 3px solid rgba(white, 0.1);
-      border-top: 3px solid white;
+      width: 16px;
+      height: 16px;
+      border: 3px solid rgba($white-primary, 0.1);
+      border-top: 3px solid $white-primary;
     }
   }
 }
@@ -87,6 +74,7 @@ const computeBorderTop = computed(() => {
   animation: spin 1s linear infinite;
   margin: 0 auto;
 }
+
 @keyframes spin {
   0% {
     transform: rotate(0deg);

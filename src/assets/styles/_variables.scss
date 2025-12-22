@@ -1,22 +1,44 @@
-:root {
-  --black-primary: #121212;
-  --white-primary: #ffffff;
+$black-primary: #151414;
+$white-primary: #FEFEFE;
+$gray-primary: #F6F6F6;
+$red-color: #E62720;
+$blue-color: #524CFF;
 
-  --backgroung-color: #ffffff;
-  --text-primary: var(--black-primary);
+@mixin tag-text {
+  line-height: 140%;
+  font-size: 14px;
 }
 
-:root.dark-theme {
-  --black-primary: #121212;
-  --white-primary: #ffffff;
-
-  --backgroung-color: #171717;
-  --text-primary: var(--white-primary);
+@mixin button-text {
+  font-size: 16px;
 }
 
-$black-primary: var(--black-primary);
-$white-primary: var(--white-primary);
-$blue-primary: #3b82f6;
-$background-color: var(--backgroung-color);
-$text-primary: var(--text-primary);
-$red-color: #F63939
+@mixin main-text {
+  line-height: 110%;
+  font-size: 18px;
+}
+
+@mixin h5-text {
+  font-size: 20px;
+  line-height: 120%;
+  font-weight: 500;
+}
+
+@mixin h4-text {
+  font-size: 22px;
+  line-height: 120%;
+  font-weight: 500;
+}
+
+@mixin h2-text {
+  font-size: 28px;
+  line-height: 110%;
+  font-weight: 400;
+}
+
+@mixin h1-text {
+  font-size: 42px;
+  line-height: 100%;
+  letter-spacing: -0.03px;
+  font-weight: 400;
+}

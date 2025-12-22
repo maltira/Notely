@@ -1,76 +1,141 @@
 <script setup lang="ts">
-import { ref } from 'vue'
-import {useAuthStore} from "@/stores/auth.store";
-import type { AuthRequest } from "@/types/auth.entity";
-import {storeToRefs} from "pinia";
-import {useNotification} from "@/composables/useNotification";
-import {useRouter} from "vue-router";
+import { onMounted, ref } from 'vue'
+import { useAuthStore } from '@/stores/auth.store'
+import type { AuthRequest } from '@/types/auth.entity'
+import { storeToRefs } from 'pinia'
+import { useNotification } from '@/composables/useNotification'
+import { useRouter } from 'vue-router'
 import Spinner from '@/components/UI/Spinner.vue'
-import { useThemeStore } from '@/stores/theme.store.ts'
 
 const router = useRouter()
-const email = ref("")
-const password = ref("")
+const email = ref('')
+const password = ref('')
 const isPasswordVisible = ref(false)
 const authStore = useAuthStore()
 const { isLoading, error } = storeToRefs(authStore)
 const { login } = authStore
-const { success, err } = useNotification()
-const themeStore = useThemeStore()
-const { theme } = storeToRefs(themeStore)
+const { infoNotification } = useNotification()
 
 const auth = async () => {
   if (email.value && password.value) {
     const req: AuthRequest = {
       email: email.value,
-      password: password.value
+      password: password.value,
     }
     await login(req)
 
     if (error.value) {
-      err("Ошибка при авторизациии", error.value.toString())
-    }
-    else {
+      infoNotification('Ошибка: ' + error.value.toString())
+    } else {
       await router.push('/')
-      success("Успешная авторизация", "Добро пожаловать в Scribble")
+      infoNotification('Успешная авторизация, добро пожаловать в Notely!')
     }
   } else {
-    err("Неверные данные", "Введите корректные данные, возможно вы указали не все поля")
+    infoNotification('Введите корректные данные, возможно вы указали не все поля')
   }
 }
+
+const goToReg = () => {
+  const login_block = document.getElementById('login_block')
+  if (login_block) {
+    login_block.style.transition = '50ms ease-out'
+    login_block.style.opacity = '0'
+    login_block.style.transform = 'scale(0.8)'
+    setTimeout(() => {
+      router.push('/registration')
+    }, 50)
+  }
+}
+onMounted(() => {
+  const login_block = document.getElementById('login_block')
+  const anim = document.getElementsByClassName('anim')
+  if (login_block && anim) {
+    setTimeout(() => {
+      login_block.style.transition = '100ms ease-out'
+      login_block.style.opacity = '1'
+      login_block.style.transform = 'scale(1)'
+    }, 1)
+
+    setTimeout(() => {
+      for (let i = 0; i < anim.length; i++) {
+        const element = anim[i]
+        if (element instanceof HTMLElement) {
+          element.style.transition = '200ms ease-out'
+          element.style.opacity = '1'
+        }
+      }
+    }, 100)
+  }
+})
 </script>
 
 <template>
   <div class="login-container">
-    <div class="login_block">
-      <div class="login_title">
-        <div class="logotype">S</div>
-        <h1>Добро пожаловать в <span>Scribble</span>!</h1>
+    <div id="login_block" class="login_block">
+      <div class="login_title anim">
+        <div class="logotype">N</div>
+        <div class="text">
+          <h1>Вход в аккаунт</h1>
+          <p>Введите ваш email и пароль ниже для входа.</p>
+        </div>
+      </div>
+      <div class="login_inputs anim">
+        <div class="input-form">
+          <p class="input-info">Email <span class="required">*</span></p>
+          <input
+            id="email-input"
+            name="email"
+            v-model="email"
+            autocomplete="off"
+            required
+            type="email"
+            placeholder="Введите email"
+            :class="{ active: email }"
+          />
+        </div>
+        <div class="input-form">
+          <p class="input-info">Пароль <span class="required">*</span></p>
+          <div class="password-input">
+            <input
+              id="password-input"
+              name="password"
+              v-model="password"
+              autocomplete="off"
+              required
+              :type="isPasswordVisible ? 'text' : 'password'"
+              placeholder="Введите пароль"
+              :class="{ active: password }"
+            />
+            <img
+              :src="isPasswordVisible ? '/icons/eye-closed.svg' : '/icons/eye.svg'"
+              alt="visible"
+              @click="isPasswordVisible = !isPasswordVisible"
+            />
+          </div>
+        </div>
+      </div>
+      <div class="buttons anim">
+        <div class="action-buttons">
+          <button
+            class="login_submit"
+            @click="auth"
+            :class="{ disabled: !email || !password || isLoading }"
+          >
+            {{ isLoading ? '' : 'Войти' }}
+            <Spinner size="small" v-if="isLoading" />
+            <img v-if="!isLoading" src="/icons/arr-white.svg" alt="arrow" />
+          </button>
+          <button class="continue" @click="router.push('/')" :class="{ disabled: isLoading }">
+            Продолжить как читатель
+          </button>
+        </div>
+
         <div class="registration">
-          <p>Вы впервые здесь?</p>
-          <RouterLink to="/registration">Присоединиться</RouterLink>
+          <p>Нет аккаунта?</p>
+          <p class="link" @click="goToReg">Создать новый</p>
         </div>
-      </div>
-      <div class="login_inputs">
-        <input id="email-input" name="email" v-model="email" autocomplete="off" required type="email" placeholder="Введите email"/>
-        <div class="password-input">
-          <input id="password-input" name="password" v-model="password" autocomplete="off" required :type="isPasswordVisible ? 'text' : 'password'" placeholder="Введите пароль"/>
-          <img :src="isPasswordVisible ? (theme == 'dark' ? '/icons/eye-closed-white.svg' : '/icons/eye-closed.svg') : (theme == 'dark' ? '/icons/eye-white.svg' : '/icons/eye.svg')"  alt="visible" @click="isPasswordVisible = !isPasswordVisible">
-        </div>
-      </div>
-      <div class="btns">
-        <button class="login_submit" @click="auth" :class="{'disabled': !email || !password || isLoading}">
-          {{isLoading ? "" : "Войти"}}
-          <Spinner size="small" v-if="isLoading"/>
-        </button>
-        <button class="continue" @click="router.push('/')" :class="{'disabled': isLoading}">
-          Продолжить как читатель
-        </button>
       </div>
     </div>
-
-    <div class="back-img small"></div>
-    <div class="back-img large"></div>
   </div>
 </template>
 
@@ -84,148 +149,99 @@ const auth = async () => {
   overflow: hidden;
   position: relative;
 
-  background-color: #171616;
-
-  & > .back-img{
-    position: absolute;
-    z-index: 1;
-    border-radius: 100%;
-
-
-    &.small {
-      width: 442px;
-      height: 442px;
-
-      background-color: rgba(white, 0.12);
-      filter: blur(430px);
-      bottom: -75px;
-      animation: 10s position-small infinite ease-in-out alternate;
-    }
-    &.large {
-      width: 483px;
-      height: 483px;
-      filter: blur(530px);
-      background-color: rgba(white, 0.2);
-
-      top: -160px;
-
-      animation: 10s position-large infinite ease-in-out alternate;
-    }
-  }
-}
-@keyframes position-large {
-  from {
-    right: -560px;
-    transform: rotate(0);
-  }
-  to {
-    right: -650px;
-    transform: rotate(3deg);
-  }
-}
-@keyframes position-small {
-  from {
-    left: -251px;
-    transform: rotate(0);
-  }
-  to {
-    left: -371px;
-    transform: rotate(-3deg);
-  }
+  background-color: $gray-primary;
 }
 
+.anim {
+  opacity: 0;
+}
 
 .login_block {
   display: flex;
   flex-direction: column;
-  gap: 60px;
-  width: 500px;
-  padding: 25px;
 
-  & > .login_title{
+  gap: 48px;
+  width: 437px;
+  padding: 32px 36px;
+  border-radius: 12px;
+
+  background: $white-primary;
+
+  border: 1px solid rgba($black-primary, 0.1);
+
+  opacity: 0;
+  transform: scale(0.8);
+
+  & > .login_title {
     display: flex;
     flex-direction: column;
-    gap: 18px;
+    gap: 24px;
     align-items: center;
 
-    & > h1 {
-      font-size: 32px;
-      text-align: center;
-      font-weight: 400;
-      color: $white-primary;
-
-      margin-top: 40px;
-
-      & > span {
-        font-weight: 700;
-      }
-    }
-    & > .registration {
-      display: flex;
-      gap: 5px;
-      font-size: 16px;
-      justify-content: center;
-      & > p {
+    & > .text {
+      & > h1 {
+        @include h4-text;
         text-align: center;
-        opacity: 0.4;
-        color: $white-primary;
+        margin-bottom: 10px;
       }
-      & > a {
-        opacity: 0.9;
-        color: $white-primary;
+      & > p {
+        @include button-text();
 
-        &:hover{
-          opacity: 1;
-        }
+        font-weight: 400;
+        text-align: center;
+        opacity: 0.5;
       }
     }
+
     & > .logotype {
-      width: 70px;
-      height: 70px;
-      background: rgba(gray, 0.1);
+      width: 44px;
+      height: 44px;
+      background: $black-primary;
+
       display: flex;
       justify-content: center;
       align-items: center;
-      border-radius: 20px;
-      font-size: 36px;
+      border-radius: 8px;
+
+      font-size: 28px;
       font-weight: 700;
       color: $white-primary;
-      animation: scale-size 5s infinite linear alternate;
     }
   }
 }
-@keyframes scale-size {
-  from {
-    box-shadow: 0 0 16px 0 rgba(gray, 0.2);
-  }
-  to {
-    box-shadow: 0 0 16px 0 $black-primary;
-  }
-}
+
 .login_inputs {
   display: flex;
   flex-direction: column;
-  gap: 15px;
+  gap: 20px;
 
-  & > input, .password-input > input {
-    height: 48px;
-    border-radius: 20px;
-    width: 100%;
-    padding: 0 16px;
-    background: $black-primary;
-    border: 1px solid rgba(gray, 0.15);
-    color: $white-primary;
-    &:focus{
-      box-shadow: 0 0 8px 0 rgba(255, 255, 255, 0.05);
+  & > .input-form {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+
+    & > .input-info {
+      @include button-text;
     }
 
-    &:-webkit-autofill{
-      transition: all 5000s ease-in-out;
+    & > input,
+    & .password-input > input {
+      @include input-form-icon;
+
+      &:-webkit-autofill,
+      &:-webkit-autofill:hover,
+      &:-webkit-autofill:focus {
+        -webkit-text-fill-color: $black-primary;
+        transition: all 5000s ease-in-out;
+        font-size: 16px !important;
+      }
     }
   }
 }
+
 .password-input {
   position: relative;
+
   & > img {
     position: absolute;
     right: 15px;
@@ -235,51 +251,58 @@ const auth = async () => {
     z-index: 2;
     opacity: 0.3;
 
-    &:hover{
+    &:hover {
       opacity: 0.5;
     }
   }
 }
 
-.btns{
+.buttons {
   width: 100%;
   display: flex;
   flex-direction: column;
-  gap: 15px;
+  gap: 24px;
 
-  & > button {
-    height: 48px;
-    font-weight: 500;
-    border-radius: 20px;
+  & > .action-buttons {
     display: flex;
-    align-items: center;
-    justify-content: center;
+    flex-direction: column;
+    gap: 12px;
 
-    &.login_submit {
-      background: $white-primary;
-      color: $black-primary;
-      gap: 15px;
-      &:hover {
-        background: rgba(#fff, 0.8);
+    & > button {
+      &.login_submit {
+        @include big-button();
       }
-    }
 
-    &.continue {
-      background: #232323;
-      color: rgba(white, 0.8);
-      opacity: 0.8;
-
-
-      &:hover {
-        opacity: 1;
+      &.continue {
+        @include button-icon();
       }
-    }
 
-    &.disabled{
-      opacity: 0.2;
-      pointer-events: none;
+      &.disabled {
+        opacity: 0.2;
+        pointer-events: none;
+      }
     }
   }
+}
 
+.registration {
+  @include button-text;
+
+  display: flex;
+  gap: 6px;
+  justify-content: center;
+  font-weight: 400;
+
+  & > p {
+    opacity: 0.5;
+  }
+  & > .link {
+    opacity: 0.7;
+    cursor: pointer;
+
+    &:hover {
+      opacity: 0.9;
+    }
+  }
 }
 </style>

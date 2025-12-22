@@ -6,6 +6,7 @@ import AdminView from '@/views/AdminView.vue'
 import { useUserStore } from '@/stores/user.store.ts'
 import NotFoundView from '@/views/NotFoundView.vue'
 import RegistrationView from '@/views/RegistrationView.vue'
+import NewPublication from '@/views/publication/NewPublication.vue'
 
 const routes: RouteRecordRaw[] = [
   {
@@ -25,7 +26,24 @@ const routes: RouteRecordRaw[] = [
       } else {
         next('/404')
       }
-    }
+    },
+  },
+  {
+    path: '/publication/create',
+    name: 'Create Publication',
+    component: NewPublication,
+    meta: {
+      hideHeader: true,
+    },
+    beforeEnter: async (to, from, next) => {
+      const userStore = useUserStore()
+      await userStore.fetchCurrentUser()
+      if (userStore.user) {
+        next()
+      } else {
+        next('/404')
+      }
+    },
   },
   {
     path: '/login',
@@ -33,7 +51,7 @@ const routes: RouteRecordRaw[] = [
     component: LoginView,
     meta: {
       hideHeader: true,
-    }
+    },
   },
   {
     path: '/registration',
@@ -41,17 +59,17 @@ const routes: RouteRecordRaw[] = [
     component: RegistrationView,
     meta: {
       hideHeader: true,
-    }
+    },
   },
   {
     path: '/404',
     name: 'NotFound',
-    component: NotFoundView
+    component: NotFoundView,
   },
   {
     path: '/:pathMatch(.*)*',
-    redirect: '/404'
-  }
+    redirect: '/404',
+  },
 ]
 
 export const router = createRouter({

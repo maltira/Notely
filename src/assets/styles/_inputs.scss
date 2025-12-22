@@ -1,0 +1,115 @@
+@use "@/assets/styles/variables.scss" as *;
+
+@mixin input-form-icon {
+  @include button-text;
+  font-weight: 400;
+
+  display: flex;
+  align-items: center;
+  width: 100%;
+
+  padding: 11px 12px;
+  height: 44px;
+
+  background-color: $gray-primary;
+  border: 1px solid rgba($black-primary, 0.05);
+  border-radius: 8px;
+  color: rgba($black-primary, 0.3);
+
+  &::placeholder {
+    transition: 200ms;
+    color: rgba($black-primary, 0.3);
+  }
+
+  & > img {
+    width: 20px;
+    height: 20px;
+    opacity: 0.3;
+  }
+
+  &:hover{
+    color: rgba($black-primary, 0.6);
+    & > img {
+      opacity: 0.6;
+    }
+
+    &::placeholder {
+      color: rgba($black-primary, 0.6);
+    }
+  }
+
+  &:focus, &.active {
+    color: rgba($black-primary, 0.99);
+    & > img {
+      opacity: 0.99;
+    }
+
+    &::placeholder {
+      color: rgba($black-primary, 0.6);
+    }
+  }
+
+  &.error {
+    color: rgba($red-color, 0.99);
+    border: 1px solid $red-color;
+    background-color: rgba($red-color, 0.03);
+    & > img {
+      opacity: 0.99;
+    }
+  }
+
+  &.disabled {
+    pointer-events: none !important;
+    opacity: 0.3 !important;
+  }
+}
+
+@mixin input-form {
+  @include button-text;
+  font-weight: 400;
+
+  display: flex;
+  align-items: center;
+  width: 100%;
+
+  padding: 12px 12px;
+  height: 44px;
+
+  background-color: transparent;
+  border: 1px solid rgba($black-primary, 0.1);
+  border-radius: 8px;
+
+  &::placeholder {
+    transition: 200ms;
+    color: rgba($black-primary, 0.6);
+  }
+
+  &:hover{
+    color: rgba($black-primary, 0.8);
+    border-color: rgba($black-primary, 0.25);
+
+    &::placeholder {
+      color: rgba($black-primary, 0.8);
+    }
+  }
+
+  &:focus, &.active {
+    color: rgba($black-primary, 0.99);
+    border-color: rgba($black-primary, 0.8);
+
+    &::placeholder {
+      color: rgba($black-primary, 0.8);
+    }
+  }
+
+  &.error {
+    color: rgba($red-color, 0.99);
+    border-color: $red-color;
+    background-color: rgba($red-color, 0.03);
+  }
+
+  &.disabled {
+    pointer-events: none !important;
+    opacity: 0.3 !important;
+  }
+}

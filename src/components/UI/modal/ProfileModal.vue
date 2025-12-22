@@ -2,15 +2,12 @@
 
 import { watch } from 'vue'
 import { storeToRefs } from 'pinia'
-import { useThemeStore } from '@/stores/theme.store.ts'
 import { useUserStore } from '@/stores/user.store.ts'
 import { useAuthStore } from '@/stores/auth.store.ts'
 import router from '@/router'
 
 const userStore = useUserStore()
 const { user } = storeToRefs(userStore)
-const themeStore = useThemeStore()
-const { theme } = storeToRefs(themeStore)
 const authStore = useAuthStore()
 const { logout } = authStore
 
@@ -48,7 +45,7 @@ watch(() => props.isOpen, (newValue) => {
 </script>
 
 <template>
-  <div class="modal-container" :class="{active: isOpen, 'dark-theme': theme === 'dark'}" @click="handleClose">
+  <div class="modal-container" :class="{active: isOpen }" @click="handleClose">
     <div class="modal-content" @click.stop>
       <div class="modal-close-button" @click="handleClose">
         <img src="/icons/close.svg" alt="close" width="28px">
@@ -65,9 +62,6 @@ watch(() => props.isOpen, (newValue) => {
       <button
         class="exit_btn"
         @click="LogOut"
-        :style="{
-            color: theme === 'dark' ? 'var(--white-primary)' : 'var(--black-primary)',
-          }"
       >
         <img width="20px" src="/icons/exit-red.svg" alt="exit">
         Выйти из профиля
@@ -108,7 +102,7 @@ watch(() => props.isOpen, (newValue) => {
   display: flex;
   flex-direction: column;
   gap: 35px;
-  background: $background-color;
+  background: $white-primary;
   width: 500px;
   position: relative;
   padding: 40px;

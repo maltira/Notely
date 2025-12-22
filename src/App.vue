@@ -5,19 +5,16 @@ import { computed, onMounted } from 'vue'
 import AppHeader from '@/components/Layout/AppHeader.vue'
 import { useRoute } from 'vue-router'
 import Notification from '@/components/UI/Notification.vue'
-import { useThemeStore } from '@/stores/theme.store.ts'
 
 const { isAppReady, initApp } = useAppInit()
 const route = useRoute()
 
-const themeStore = useThemeStore()
 
 const hideHeader = computed(() => {
   return route.meta.hideHeader === true
 })
 
 onMounted(async () => {
-  themeStore.initializeTheme()
   await initApp()
 })
 </script>
@@ -37,6 +34,6 @@ onMounted(async () => {
 
 <style lang="scss" scoped>
 .main-content{
-  background: $background-color;
+  background: $white-primary;
 }
 </style>

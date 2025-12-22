@@ -4,11 +4,7 @@ import type { UpdatedUser, UserEntity } from '@/types/user.entity.ts'
 import Spinner from '@/components/UI/Spinner.vue'
 import { useUserStore } from '@/stores/user.store.ts'
 import { storeToRefs } from 'pinia'
-import { useThemeStore } from '@/stores/theme.store.ts'
 import SelectRoleModal from '@/components/UI/modal/SelectRoleModal.vue'
-
-const themeStore = useThemeStore()
-const { theme } = storeToRefs(themeStore)
 
 const userStore = useUserStore()
 const { isLoading } = storeToRefs(userStore)
@@ -103,7 +99,7 @@ watch(() => props.isOpen,
 </script>
 
 <template>
-  <div class="modal-container" :class="{ active: isOpen, 'dark-theme': theme === 'dark' }" @click="handleClose">
+  <div class="modal-container" :class="{ active: isOpen }" @click="handleClose">
     <div class="modal-content" @click.stop>
       <div class="modal-close-button" @click="handleClose">
         <img src="/icons/close.svg" alt="close" width="28px" />
@@ -133,14 +129,14 @@ watch(() => props.isOpen,
             placeholder="Новый пароль"
           />
           <img
-            :src="isPasswordVisible ? (theme == 'dark' ? '/icons/eye-closed-white.svg' : '/icons/eye-closed.svg') : (theme == 'dark' ? '/icons/eye-white.svg' : '/icons/eye.svg')"
+            :src="isPasswordVisible ? '/icons/eye-closed.svg' : '/icons/eye.svg'"
             alt="visible"
             @click="isPasswordVisible = !isPasswordVisible"
           />
         </div>
         <button class="btn-select-role" @click="toggleRoleModal">
           <span>{{groupName ? groupName : props.user ? props.user.Group.name : 'Unknown'}}</span>
-          <img :src="theme === 'dark' ? 'icons/edit-white.svg' : 'icons/edit.svg'" alt="edit" width="16px" />
+          <img src="/icons/edit.svg" alt="edit" width="16px" />
         </button>
       </div>
       <div class="modal-actions">
@@ -148,10 +144,6 @@ watch(() => props.isOpen,
           class="submit_action"
           :class="{ disabled: !isUpdateAvailable || isLoading }"
           @click="isUpdateAvailable ? UpdateUser() : null"
-          :style="{
-            background: theme === 'dark' ? 'var(--white-primary)' : 'var(--black-primary)',
-            color: theme === 'dark' ? 'var(--black-primary)' : 'var(--white-primary)'
-          }"
         >
           {{ !isLoading ? 'Сохранить' : '' }}
           <Spinner size="small" v-if="isLoading" />
@@ -159,10 +151,6 @@ watch(() => props.isOpen,
         <button
           class="cancel_action"
           @click="handleClose"
-          :style="{
-            border: theme === 'dark' ? '1px solid var(--white-primary)' : '1px solid var(--black-primary)',
-            color: theme === 'dark' ? 'var(--white-primary)' : 'var(--black-primary)'
-          }"
         >
           Отмена
         </button>
@@ -205,7 +193,7 @@ watch(() => props.isOpen,
   display: flex;
   flex-direction: column;
   gap: 35px;
-  background: $background-color;
+  background: $white-primary;
   width: 500px;
   position: relative;
   padding: 40px;

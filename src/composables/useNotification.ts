@@ -1,8 +1,6 @@
 import { ref } from 'vue'
 
 export interface NotificationOptions {
-  type: 'success' | 'err' | 'warning' | 'info'
-  title: string
   description: string
   duration?: number
 }
@@ -46,26 +44,14 @@ export function useNotification() {
     }
   }
 
-  const success = (title: string, description: string) => {
-    showNotification({type: 'success', title, description})
-  }
-  const warning = (title: string, description: string) => {
-    showNotification({type: 'warning', title, description})
-  }
-  const err = (title: string, description: string) => {
-    showNotification({type: 'err', title, description})
-  }
-  const info = (title: string, description: string) => {
-    showNotification({type: 'info', title, description})
+  const infoNotification = (description: string) => {
+    showNotification({ description: description })
   }
 
   return {
     notifications,
     showNotification,
     removeNotification,
-    success,
-    err,
-    warning,
-    info
+    infoNotification
   }
 }

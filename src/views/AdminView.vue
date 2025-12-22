@@ -6,22 +6,16 @@ import { useNotification } from '@/composables/useNotification'
 import { formatDate } from '@/utils/date_format.ts'
 import Spinner from '@/components/UI/Spinner.vue'
 import type { CreateUserRequest, UpdatedUser, UserEntity } from '@/types/user.entity.ts'
-import DeleteModal from '@/components/UI/modal/DeleteModal.vue'
-import EditModal from '@/components/UI/modal/EditModal.vue'
-import { useThemeStore } from '@/stores/theme.store.ts'
-import { useRoute, useRouter } from 'vue-router'
-import NewRecordModal from '@/components/UI/modal/NewRecordModal.vue'
+import { useRouter } from 'vue-router'
 
 const router = useRouter()
-const route = useRoute()
-
-const themeStore = useThemeStore()
-const { theme } = storeToRefs(themeStore)
 
 const userStore = useUserStore()
-const { user, users, isLoading, error, filteredUsers, searchQuery, filterQuery } = storeToRefs(userStore)
-const { fetchAllUsers, updateUser, deleteUser, setSearchQuery, setFilterQuery, createUser } = userStore
-const { success, err } = useNotification()
+const { user, users, isLoading, error, filteredUsers, searchQuery, filterQuery } =
+  storeToRefs(userStore)
+const { fetchAllUsers, updateUser, deleteUser, setSearchQuery, setFilterQuery, createUser } =
+  userStore
+const { infoNotification } = useNotification()
 
 const openStatusSelect = ref<number | null>(null)
 const isEditModalOpen = ref(false)
@@ -70,31 +64,27 @@ const changeUserStatus = async (userID: string, is_block: boolean) => {
   await updateUser(newUser)
 
   if (error.value) {
-    err('Ошибка обновления пользователя', error.value.toString())
-  }
-  else if (!users.value) {
-    err('Ошибка обновления пользователя', "Список пользователей пуст")
-  }
-  else {
+    infoNotification('Ошибка: ' + error.value.toString())
+  } else if (!users.value) {
+    infoNotification('Список пользователей пуст')
+  } else {
     const usrIdx = users.value.findIndex((e) => e.id === userID)
     if (usrIdx !== -1) {
       users.value[usrIdx]!.is_block = is_block
     }
     openStatusSelect.value = null
-    success('Пользователь обновлен', `Вы изменили данные у пользователя с ID: ${userID}`)
+    infoNotification(`Вы изменили данные у пользователя с ID: ${userID}`)
   }
 }
 
 const changeUser = async (req: UpdatedUser) => {
   await updateUser(req)
   if (error.value) {
-    err('Ошибка обновления пользователя', error.value.toString())
-  }
-  else if (!users.value) {
-    err('Ошибка обновления пользователя', "Список пользователей пуст")
-  }
-  else {
-    success('Пользователь обновлен', `Вы изменили данные у пользователя с ID: ${req.id}`)
+    infoNotification('Ошибка: ' + error.value.toString())
+  } else if (!users.value) {
+    infoNotification('Список пользователей пуст')
+  } else {
+    infoNotification(`Вы изменили данные у пользователя с ID: ${req.id}`)
     await fetchAllUsers()
   }
 }
@@ -103,25 +93,22 @@ const deleteUserByID = async (id: string) => {
   await deleteUser(id)
 
   if (error.value) {
-    err('Ошибка удаления пользователя', error.value.toString())
-  }
-  else if (!users.value) {
-    err('Ошибка удаления пользователя', "Список пользователей пуст")
-  }
-  else {
+    infoNotification('Ошибка: ' + error.value.toString())
+  } else if (!users.value) {
+    infoNotification('Список пользователей пуст')
+  } else {
     users.value = users.value.filter((e) => e.id !== id)
     isDeleteModalOpen.value = false
-    success('Пользователь удалён', `Вы удалили пользователя с ID: ${id}`)
+    infoNotification(`Вы удалили пользователя с ID: ${id}`)
   }
 }
 
 const createNewUser = async (req: CreateUserRequest) => {
   await createUser(req)
   if (error.value) {
-    err('Ошибка создания пользователя', error.value.toString())
-  }
-  else {
-    success("Успешная операция", "Вы добавили нового пользователя в базу данных")
+    infoNotification('Ошибка: ' + error.value.toString())
+  } else {
+    infoNotification('Вы добавили нового пользователя в базу данных')
     await fetchAllUsers()
   }
 }
@@ -146,7 +133,7 @@ onMounted(async () => {
   document.addEventListener('click', handleClickOutside)
   await fetchAllUsers()
   if (error.value) {
-    err('Ошибка получения пользователей', error.value.toString())
+    infoNotification('Ошибка: ' + error.value.toString())
   }
 })
 
@@ -159,53 +146,102 @@ onUnmounted(() => {
   <div class="admin_page">
     <div class="page-header">
       <div class="search-result-header">
-        <p @click="router.push('/')">← {{'Главное меню'}}</p>
-        <h1>{{"Список всех пользователей"}}</h1>
+        <p @click="router.push('/')">← {{ 'Главное меню' }}</p>
+        <h1>{{ 'Список всех пользователей' }}</h1>
       </div>
-      <button v-if="user && user.Group.name === 'Админ'" @click="toggleNewRecordModal" class="button new-record">
-        <img :src=" theme === 'dark' ? '/icons/add-white.svg' : '/icons/add.svg'" alt="add">
+      <button
+        v-if="user && user.Group.name === 'Админ'"
+        @click="toggleNewRecordModal"
+        class="button new-record"
+      >
+        <img src="/icons/add.svg" alt="add" />
         Новая запись
       </button>
     </div>
     <Spinner v-if="isLoading" />
-    <div v-if="!error && !isLoading && filteredUsers && filteredUsers.length > 0" class="table-container">
+    <div
+      v-if="!error && !isLoading && filteredUsers && filteredUsers.length > 0"
+      class="table-container"
+    >
       <table>
         <thead>
           <tr class="main-row">
             <td>
-              <button @click="handleFilter('id')" :class="{'active-filter': filterQuery === 'id'}">
+              <button
+                @click="handleFilter('id')"
+                :class="{ 'active-filter': filterQuery === 'id' }"
+              >
                 ID
-                <img :src="theme == 'dark' ? '/icons/arrow-white.svg' : '/icons/arrow.svg'" alt="arrow" width="12px" />
+                <img
+                  src="/icons/arrow.svg"
+                  alt="arrow"
+                  width="12px"
+                />
               </button>
             </td>
             <td>
-              <button @click="handleFilter('name')" :class="{'active-filter': filterQuery === 'name'}">
+              <button
+                @click="handleFilter('name')"
+                :class="{ 'active-filter': filterQuery === 'name' }"
+              >
                 Имя
-                <img :src="theme == 'dark' ? '/icons/arrow-white.svg' : '/icons/arrow.svg'" alt="arrow" width="12px" />
+                <img
+                  src="/icons/arrow.svg"
+                  alt="arrow"
+                  width="12px"
+                />
               </button>
             </td>
             <td>
-              <button @click="handleFilter('email')" :class="{'active-filter': filterQuery === 'email'}">
+              <button
+                @click="handleFilter('email')"
+                :class="{ 'active-filter': filterQuery === 'email' }"
+              >
                 Email
-                <img :src="theme == 'dark' ? '/icons/arrow-white.svg' : '/icons/arrow.svg'" alt="arrow" width="12px" />
+                <img
+                  src="/icons/arrow.svg"
+                  alt="arrow"
+                  width="12px"
+                />
               </button>
             </td>
             <td>
-              <button @click="handleFilter('group')" :class="{'active-filter': filterQuery === 'group'}">
+              <button
+                @click="handleFilter('group')"
+                :class="{ 'active-filter': filterQuery === 'group' }"
+              >
                 Группа
-                <img :src="theme == 'dark' ? '/icons/arrow-white.svg' : '/icons/arrow.svg'" alt="arrow" width="12px" />
+                <img
+                  src="/icons/arrow.svg"
+                  alt="arrow"
+                  width="12px"
+                />
               </button>
             </td>
             <td>
-              <button @click="handleFilter('status')" :class="{'active-filter': filterQuery === 'status'}">
+              <button
+                @click="handleFilter('status')"
+                :class="{ 'active-filter': filterQuery === 'status' }"
+              >
                 Статус
-                <img :src="theme == 'dark' ? '/icons/arrow-white.svg' : '/icons/arrow.svg'" alt="arrow" width="12px" />
+                <img
+                  src="/icons/arrow.svg"
+                  alt="arrow"
+                  width="12px"
+                />
               </button>
             </td>
             <td>
-              <button @click="handleFilter('last_visit')" :class="{'active-filter': filterQuery === 'last_visit'}">
+              <button
+                @click="handleFilter('last_visit')"
+                :class="{ 'active-filter': filterQuery === 'last_visit' }"
+              >
                 Последнее посещение
-                <img :src="theme == 'dark' ? '/icons/arrow-white.svg' : '/icons/arrow.svg'" alt="arrow" width="12px" />
+                <img
+                  src="/icons/arrow.svg"
+                  alt="arrow"
+                  width="12px"
+                />
               </button>
             </td>
             <td v-if="user && user.Group.name === 'Админ'"></td>
@@ -214,56 +250,67 @@ onUnmounted(() => {
         </thead>
         <tbody>
           <tr v-for="(usr, i) in filteredUsers" :key="i">
-          <td>{{ usr.id }}</td>
-          <td>{{ usr.name }}</td>
-          <td>{{ usr.email }}</td>
-          <td>{{ usr.Group.name }}</td>
-          <td class="td-status">
-            <button
-              :class="{
-                disabled: user && user.Group.name !== 'Админ',
-                block: usr.is_block,
-                'active-status': openStatusSelect === i,
-                'dark-theme': theme === 'dark'
-              }"
-              @click="changeStatusSelect(i)"
-            >
-              {{ usr.is_block ? 'Заблокирован' : 'Доступен' }}
+            <td>{{ usr.id }}</td>
+            <td>{{ usr.name }}</td>
+            <td>{{ usr.email }}</td>
+            <td>{{ usr.Group.name }}</td>
+            <td class="td-status">
+              <button
+                :class="{
+                  disabled: user && user.Group.name !== 'Админ',
+                  block: usr.is_block,
+                  'active-status': openStatusSelect === i,
+                }"
+                @click="changeStatusSelect(i)"
+              >
+                {{ usr.is_block ? 'Заблокирован' : 'Доступен' }}
+                <img
+                  src="/icons/arrow.svg"
+                  :class="{ disabled: user && user.Group.name !== 'Админ' }"
+                  alt="arrow"
+                  width="16px"
+                />
+              </button>
+              <div class="block-status" v-if="openStatusSelect === i" @click.stop>
+                <p
+                  :class="{ selected: usr.is_block }"
+                  @click="usr.is_block ? null : changeUserStatus(usr.id, true)"
+                >
+                  Заблокирован
+                </p>
+                <p
+                  :class="{ selected: !usr.is_block }"
+                  @click="usr.is_block ? changeUserStatus(usr.id, false) : null"
+                >
+                  Доступен
+                </p>
+              </div>
+            </td>
+            <td>{{ formatDate(usr.last_visit_at, 'DD/MM/YYYY HH:mm') }}</td>
+            <td v-if="user && user.Group.name === 'Админ'" class="action">
               <img
-                src="/icons/arrow.svg"
-                :class="{ disabled: user && user.Group.name !== 'Админ' }"
-                alt="arrow"
-                width="16px"
+                @click="toggleEditModal(usr)"
+                src="/icons/edit.svg"
+                alt="edit"
               />
-            </button>
-            <div class="block-status" v-if="openStatusSelect === i" @click.stop>
-              <p
-                :class="{ selected: usr.is_block }"
-                @click="usr.is_block ? null : changeUserStatus(usr.id, true)"
-              >
-                Заблокирован
-              </p>
-              <p
-                :class="{ selected: !usr.is_block }"
-                @click="usr.is_block ? changeUserStatus(usr.id, false) : null"
-              >
-                Доступен
-              </p>
-            </div>
-          </td>
-          <td>{{ formatDate(usr.last_visit_at, 'DD/MM/YYYY HH:mm') }}</td>
-          <td v-if="user && user.Group.name === 'Админ'" class="action"><img @click="toggleEditModal(usr)" :src="theme === 'dark' ? '/icons/edit-white.svg' : '/icons/edit.svg'" alt="edit"></td>
-          <td v-if="user && user.Group.name === 'Админ'" class="action" ><img @click="toggleDeleteModal(usr)" :src="theme === 'dark' ? '/icons/delete-white.svg' : '/icons/delete.svg'" alt="del"></td>
-        </tr>
+            </td>
+            <td v-if="user && user.Group.name === 'Админ'" class="action">
+              <img
+                @click="toggleDeleteModal(usr)"
+                src="/icons/delete.svg"
+                alt="del"
+              />
+            </td>
+          </tr>
         </tbody>
       </table>
     </div>
     <p v-else class="search-result-none">Ничего не найдено</p>
   </div>
 
-  <DeleteModal :is-open="isDeleteModalOpen" :user="userDeleting" :on-user-delete="deleteUserByID" @close="isDeleteModalOpen = false"/>
-  <EditModal :is-open="isEditModalOpen" :user="userEditing" :update-user="changeUser" @close="isEditModalOpen = false"/>
-  <NewRecordModal :is-open="isNewRecordModalOpen" :create-user="createNewUser" @close="isNewRecordModalOpen = false"/>
+  <!--  <DeleteModal :is-open="isDeleteModalOpen" :user="userDeleting" :on-user-delete="deleteUserByID" @close="isDeleteModalOpen = false"/>-->
+  <!--  <EditModal :is-open="isEditModalOpen" :user="userEditing" :update-user="changeUser" @close="isEditModalOpen = false"/>-->
+  <!--  <NewRecordModal :is-open="isNewRecordModalOpen" :create-user="createNewUser" @close="isNewRecordModalOpen = false"/>-->
 </template>
 
 <style scoped lang="scss">
@@ -272,7 +319,7 @@ onUnmounted(() => {
   padding: 50px 50px;
 }
 
-.table-container{
+.table-container {
   padding: 15px;
   border-radius: 16px;
   background: rgba(gray, 0.05);
@@ -280,7 +327,8 @@ onUnmounted(() => {
 }
 table {
   width: 100%;
-  & > thead > tr, & > tbody > tr {
+  & > thead > tr,
+  & > tbody > tr {
     &.main-row {
       & > td {
         font-weight: 500;
@@ -391,7 +439,7 @@ table {
         opacity: 1;
       }
     }
-    &.active-filter{
+    &.active-filter {
       & > img {
         opacity: 1;
       }
@@ -407,13 +455,13 @@ table {
     width: 20px;
     opacity: 0.7;
 
-    &:hover{
+    &:hover {
       opacity: 0.9;
     }
   }
 }
 
-.page-header{
+.page-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -438,12 +486,12 @@ table {
     transform: translateY(1px);
   }
 
-  &:hover{
+  &:hover {
     opacity: 0.9;
   }
 }
 
-.search-result-header{
+.search-result-header {
   display: flex;
   gap: 10px;
   flex-direction: column;
@@ -456,12 +504,12 @@ table {
     opacity: 0.7;
     cursor: pointer;
 
-    &:hover{
+    &:hover {
       opacity: 0.9;
     }
   }
 }
-.search-result-none{
+.search-result-none {
   height: 400px;
   display: flex;
   justify-content: center;

@@ -4,25 +4,19 @@ import { usePublicationStore } from '@/stores/publication.store.ts'
 import { storeToRefs } from 'pinia'
 import { formatDate } from '@/utils/date_format.ts'
 import type { PublicationEntity, PublicationRequest } from '@/types/publication.entity.ts'
-import PublicationModal from '@/components/UI/modal/PublicationModal.vue'
 import { useNotification } from '@/composables/useNotification.ts'
-import { useThemeStore } from '@/stores/theme.store.ts'
 import { useUserStore } from '@/stores/user.store.ts'
-import NewPostModal from '@/components/UI/modal/NewPostModal.vue'
 import { parseCategories } from '@/utils/validate_categories.ts'
-import AppFooter from '@/components/Layout/AppFooter.vue'
 
-const themeStore = useThemeStore()
-const { theme } = storeToRefs(themeStore)
-
-const {success, err} = useNotification()
+const { infoNotification } = useNotification()
 
 const userStore = useUserStore()
 const publicationStore = usePublicationStore()
 
 const { user } = storeToRefs(userStore)
 const { error, searchPublicationQuery, allPublications, isLoading } = storeToRefs(publicationStore)
-const { fetchAllPublications, createPublication, deletePublication, setSearchQuery  } = publicationStore
+const { fetchAllPublications, createPublication, deletePublication, setSearchQuery } =
+  publicationStore
 
 const isPublicationModalOpen = ref(false)
 const publicationOpen = ref<PublicationEntity | null>(null)
@@ -44,10 +38,9 @@ const toggleNewPostModal = () => {
 const DeletePublication = async (id: string) => {
   await deletePublication(id)
   if (error.value) {
-    err("Ошибка удаления", error.value)
-  }
-  else {
-    success("Публикация удалена", `Вы успешно удалили публикацию с ID: ${id}`)
+    infoNotification('Ошибка: ' + error.value.toString())
+  } else {
+    infoNotification(`Вы успешно удалили публикацию`)
     isPublicationModalOpen.value = false
   }
 }
@@ -55,10 +48,9 @@ const CreatePublication = async (req: PublicationRequest) => {
   await createPublication(req)
 
   if (error.value) {
-    err("Ошибка создания", error.value)
-  }
-  else {
-    success("Публикация создана", `Вы успешно создали пуликацию «${req.title}»`)
+    infoNotification('Ошибка: ' + error.value.toString())
+  } else {
+    infoNotification(`Публикация «${req.title}» создана`)
     isNewPostModalOpen.value = false
   }
 }
@@ -72,11 +64,26 @@ onMounted(async () => {
   <div class="publications_page">
     <div class="page-header">
       <div class="search-result-header">
-        <p v-if="searchPublicationQuery" @click="searchPublicationQuery ? setSearchQuery('') : null">← Все публикации</p>
-        <h1>{{ searchPublicationQuery ? `Публикации по запросу «${searchPublicationQuery}»` : "Все публикации"}}</h1>
+        <p
+          v-if="searchPublicationQuery"
+          @click="searchPublicationQuery ? setSearchQuery('') : null"
+        >
+          ← Все публикации
+        </p>
+        <h1>
+          {{
+            searchPublicationQuery
+              ? `Публикации по запросу «${searchPublicationQuery}»`
+              : 'Все публикации'
+          }}
+        </h1>
       </div>
-      <button v-if="user && user.Group.name === 'Админ' || user && user.Group.can_publish_posts" @click="toggleNewPostModal" class="button new-post">
-        <img :src=" theme === 'dark' ? '/icons/add-white.svg' : '/icons/add.svg'" alt="add">
+      <button
+        v-if="(user && user.Group.name === 'Админ') || (user && user.Group.can_publish_posts)"
+        @click="toggleNewPostModal"
+        class="button new-post"
+      >
+        <img src="/icons/add.svg" alt="add" />
         Новая публикация
       </button>
     </div>
@@ -88,32 +95,47 @@ onMounted(async () => {
         @click="togglePublicationModal(i)"
       >
         <div class="p-header">
-          <h2>{{p.title}}</h2>
-          <p>{{p.description}}</p>
+          <h2>{{ p.title }}</h2>
+          <p>{{ p.description }}</p>
           <div class="p-categories" v-if="parseCategories(p.categories).length > 0">
-            <div class="category-item"
-                 v-for="(c, i) in parseCategories(p.categories).slice(0, 5)"
-                 :key="i"
+            <div
+              class="category-item"
+              v-for="(c, i) in parseCategories(p.categories).slice(0, 5)"
+              :key="i"
             >
-              <p>{{c}}</p>
+              <p>{{ c }}</p>
             </div>
           </div>
         </div>
         <div class="p-footer">
           <div class="user-info">
-            <img width="16px" :src="theme === 'dark' ? '/icons/user-white.svg' : '/icons/user.svg'" alt="">
-            <p>{{p.User.name || 'Unknown'}}</p>
+            <img
+              width="16px"
+              src="/icons/user.svg"
+              alt=""
+            />
+            <p>{{ p.User.name || 'Unknown' }}</p>
           </div>
-          <p>{{formatDate(p.created_at, 'DD/MM/YYYY HH:mm')}}</p>
+          <p>{{ formatDate(p.created_at, 'DD/MM/YYYY HH:mm') }}</p>
         </div>
       </div>
     </div>
-    <p v-if="!isLoading && allPublications.length === 0" class="search-result-none">Ничего не найдено</p>
-    <AppFooter/>
+    <p v-if="!isLoading && allPublications.length === 0" class="search-result-none">
+      Ничего не найдено
+    </p>
   </div>
 
-  <NewPostModal :is-open="isNewPostModalOpen" :create-post="CreatePublication" @close="isNewPostModalOpen = false"/>
-  <PublicationModal :is-open="isPublicationModalOpen" :on-delete="DeletePublication" :publication="publicationOpen" @close="isPublicationModalOpen = false"/>
+<!--  <NewPostModal-->
+<!--    :is-open="isNewPostModalOpen"-->
+<!--    :create-post="CreatePublication"-->
+<!--    @close="isNewPostModalOpen = false"-->
+<!--  />-->
+<!--  <PublicationModal-->
+<!--    :is-open="isPublicationModalOpen"-->
+<!--    :on-delete="DeletePublication"-->
+<!--    :publication="publicationOpen"-->
+<!--    @close="isPublicationModalOpen = false"-->
+<!--  />-->
 </template>
 
 <style scoped lang="scss">
@@ -124,7 +146,7 @@ onMounted(async () => {
   flex-direction: column;
 }
 
-.page-header{
+.page-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -149,12 +171,12 @@ onMounted(async () => {
     transform: translateY(1px);
   }
 
-  &:hover{
+  &:hover {
     opacity: 0.9;
   }
 }
 
-.search-result-header{
+.search-result-header {
   display: flex;
   gap: 10px;
   flex-direction: column;
@@ -167,12 +189,12 @@ onMounted(async () => {
     opacity: 0.7;
     cursor: pointer;
 
-    &:hover{
+    &:hover {
       opacity: 0.9;
     }
   }
 }
-.search-result-none{
+.search-result-none {
   height: 400px;
   display: flex;
   justify-content: center;
@@ -186,16 +208,18 @@ onMounted(async () => {
   gap: 15px;
   flex-wrap: wrap;
 }
-.publication-item{
+.publication-item {
   display: flex;
   flex-direction: column;
   justify-content: space-between;
   gap: 30px;
   padding: 30px;
-  background: $background-color;
+  background: $white-primary;
   border: 1px solid rgba(gray, 0.2);
   background: rgba(gray, 0.05);
-  width: calc( 100% / 4 - 15px + 15px / 4); // ширина конейнера - отступ + поправка по правому отступу
+  width: calc(
+    100% / 4 - 15px + 15px / 4
+  ); // ширина конейнера - отступ + поправка по правому отступу
   border-radius: 12px;
   cursor: pointer;
 
@@ -213,7 +237,7 @@ onMounted(async () => {
     }
   }
 }
-.p-header{
+.p-header {
   display: flex;
   flex-direction: column;
   gap: 20px;
@@ -232,7 +256,7 @@ onMounted(async () => {
     -webkit-line-clamp: 8; /* number of lines to show */
     line-clamp: 8;
     -webkit-box-orient: vertical;
-    white-space: pre-line
+    white-space: pre-line;
   }
 }
 .p-categories {
@@ -282,13 +306,12 @@ onMounted(async () => {
       white-space: nowrap;
       text-overflow: ellipsis;
       overflow: hidden;
-
     }
     & > img {
       opacity: 0.7;
     }
 
-    &:hover{
+    &:hover {
       opacity: 0.9;
     }
   }

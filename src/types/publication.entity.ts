@@ -17,11 +17,11 @@ export interface PublicationRequest {
   title: string;
   description: string;
   user_id: string;
-  categories: string;
+  categories: Array<string>;
 }
 export interface PublicationUpdateRequest {
-  id: string;
-  title: string;
-  description: string;
-  categories: string;
+  id: string
+  title: string
+  description: string
+  categories: Array<string>
 }

@@ -1,29 +1,49 @@
 @use 'variables';
+@use 'buttons';
+@use 'inputs';
 
 @font-face {
-  font-family: 'Intro Friday';
-  src: url("public/fonts/IntroFriday.ttf");
+  font-family: 'SF Pro Display';
+  src: url("public/fonts/SFPRODISPLAYREGULAR.OTF");
+  font-weight: 400;
+}
+
+@font-face {
+  font-family: 'SF Pro Display';
+  src: url("public/fonts/SFPRODISPLAYMEDIUM.OTF");
+  font-weight: 500;
 }
 
 body {
   font-family:
+          "SF Pro Display",
           -apple-system,
           'Segoe UI',
           'Helvetica Neue',
           sans-serif;
   font-size: 18px;
-  color: $text-primary;
-  line-height: 1.1;
+  color: $black-primary;
+
   overflow-x: hidden;
   overflow-y: scroll;
 
-  background: $background-color;
+  background: $white-primary;
+}
+
+.required {
+  color: $red-color;
 }
 
 h1, h2, h4, p {
-  color: $text-primary;
+  color: $black-primary;
 }
 * {
+  font-family:
+          "SF Pro Display",
+          -apple-system,
+          'Segoe UI',
+          'Helvetica Neue',
+          sans-serif;
   padding: 0;
   margin: 0;
   border: none;
@@ -38,11 +58,12 @@ h1, h2, h4, p {
   transition: 200ms;
 }
 
+
 /* Links */
 
 a, a:link, a:visited  {
   text-decoration: none;
-  color: $text-primary;
+  color: $black-primary;
 }
 
 a:hover  {
@@ -69,20 +90,11 @@ img, svg {
   height: auto;
 }
 
-address {
-  font-style: normal;
-}
-
 /* Form */
 
 input, textarea, button, select {
-  font-family: inherit;
-  font-size: 16px;
-  color: $text-primary;
+  color: $black-primary;
   background-color: transparent;
-}
-button {
-  font-weight: 500;
 }
 input::-ms-clear {
   display: none;
@@ -102,14 +114,6 @@ button:focus, button:active {
 button::-moz-focus-inner {
   padding: 0;
   border: 0;
-}
-
-label {
-  cursor: pointer;
-}
-
-legend {
-  display: block;
 }
 
 input[type='file'] {
