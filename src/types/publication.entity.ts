@@ -1,5 +1,11 @@
 import type { UserEntity } from '@/types/user.entity.ts'
+import type {
+  PublicationCategories,
+  PublicationCategoriesRequest,
+  PublicationCategoriesUpdateRequest,
+} from '@/types/category.entity.ts'
 
+// ? Основная сущность
 export interface PublicationEntity {
   id: string
   title: string
@@ -14,29 +20,15 @@ export interface PublicationEntity {
   PublicationCategories: PublicationCategories[]
 }
 
-export interface Category {
-  id?: string
-  name: string
-}
 
-export interface PublicationCategories {
-  id?: string
-  publication_id?: string
-  category_id?: string
-
-  background_color: string;
-  text_color: string;
-
-  Category: Category
-}
-
+// ? Сущности для запросов
 export interface PublicationRequest {
   title: string
   description: string
   user_id: string
   background_color?: string
 
-  categories: Array<PublicationCategories>
+  categories: Array<PublicationCategoriesRequest>
 }
 export interface PublicationUpdateRequest {
   id: string
@@ -44,5 +36,5 @@ export interface PublicationUpdateRequest {
   description: string | null
   background_color: string | null
 
-  categories: Array<PublicationCategories> | null
+  categories: Array<PublicationCategoriesUpdateRequest> | null
 }

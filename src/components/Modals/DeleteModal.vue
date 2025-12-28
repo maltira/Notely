@@ -1,85 +1,96 @@
 <script setup lang="ts">
-import { watch } from 'vue'
-import type { UserEntity } from '@/types/user.entity.ts'
+import { onMounted, onUnmounted } from 'vue'
 import { useUserStore } from '@/stores/user.store.ts'
 import { storeToRefs } from 'pinia'
 import Spinner from '@/components/UI/Spinner.vue'
-import { useThemeStore } from '@/stores/theme.store.ts'
+import { usePublicationStore } from '@/stores/publication.store.ts'
+import { useNotification } from '@/composables/useNotification.ts'
 
-const themeStore = useThemeStore()
-const { theme } = storeToRefs(themeStore)
+const { infoNotification } = useNotification()
 
+const publicationStore = usePublicationStore()
 const userStore = useUserStore()
-const { isLoading } = storeToRefs(userStore)
+const { user } = storeToRefs(userStore)
+const { deletePublication } = publicationStore
+const { error, isLoading } = storeToRefs(publicationStore)
 
 interface Props {
-  isOpen: boolean,
-  user: UserEntity | null
-  onUserDelete: (id: string) => Promise<void>;
+  publication_id: string
+  publication_title: string
+  author_id: string
 }
 const props = defineProps<Props>()
 
 // обращение к родителю
 const emit = defineEmits<{ close: [] }>()
 const handleClose = () => {
-  emit('close')
+  const delete_pub_container = document.getElementById('delete_pub_container')
+  const delete_pub_content = document.getElementById('delete_pub_content')
+
+  if (delete_pub_container && delete_pub_content) {
+    delete_pub_container.style.opacity = '0'
+    delete_pub_content.style.transform = 'scale(0.8)'
+  }
+  setTimeout(() => {
+    emit('close')
+  }, 100)
 }
 
 const handleKeydown = (event: KeyboardEvent) => {
-  if (event.key === 'Escape' && props.isOpen) {
+  if (event.key === 'Escape') {
     handleClose()
   }
 }
 
-// слежка за isOpen
-watch(() => props.isOpen, (newValue) => {
-  if (newValue) {
-    document.addEventListener('keydown', handleKeydown)
+const onDeletePub = async () => {
+  if (user.value && (user.value.id === props.author_id || user.value.Group.name === 'Админ')) {
+    await deletePublication(props.publication_id)
+
+    if (error.value) {
+      infoNotification('❌ ' + error.value)
+    } else {
+      infoNotification('😟 Публикация была успешно удалена')
+      handleClose()
+    }
   } else {
-    document.removeEventListener('keydown', handleKeydown)
+    infoNotification('❌ Недостаточно прав для удаления публикации')
   }
+}
+
+onMounted(() => {
+  const delete_pub_container = document.getElementById('delete_pub_container')
+  const delete_pub_content = document.getElementById('delete_pub_content')
+  document.addEventListener('keydown', handleKeydown)
+
+  if (delete_pub_container && delete_pub_content) {
+    setTimeout(() => {
+      delete_pub_container.style.opacity = '1'
+      delete_pub_content.style.transform = 'scale(1)'
+    }, 1)
+  }
+})
+onUnmounted(() => {
+  document.removeEventListener('keydown', handleKeydown)
 })
 </script>
 
 <template>
-  <div class="modal-container" :class="{active: isOpen, 'dark-theme': theme === 'dark'}" @click="handleClose">
-    <div class="modal-content" @click.stop>
-      <div class="modal-close-button" @click="handleClose" >
-        <img src="/icons/close.svg" alt="close" width="30px">
-      </div>
+  <div id="delete_pub_container" class="modal-container" @click="handleClose">
+    <div id="delete_pub_content" class="modal-content" @click.stop>
       <div class="modal-header">
-        <h1>Вы уверены, что хотите удалить запись?</h1>
-        <p>Рекомендуется осторожно подходить к удалению, учитывая все риски</p>
+        <h4>Удалить публикацию</h4>
+        <div class="modal-close-button" @click="handleClose">
+          <img src="/icons/close.svg" alt="close" width="24px" />
+        </div>
       </div>
-      <div class="modal-body">
-        <p>ID: {{user ? user.id : "Unknown"}}</p>
-        <p>Имя: {{user ? user.name : "Unknown"}}</p>
-        <p>Email: {{user ? user.email : "Unknown"}}</p>
-        <p>Группа: {{user ? user.Group.name : "Unknown"}}</p>
-        <p>Статус: {{user ? (user.is_block ? "Заблокирован" : "Доступен") : "Unknown"}}</p>
-      </div>
+      <p class="main-text">
+        Вы уверены, что хотите удалить публикацию <span>«{{ publication_title }}»</span>?
+      </p>
       <div class="modal-actions">
-        <button
-          class="submit_action"
-          :class="{'disabled': isLoading}"
-          @click="onUserDelete(user!.id)"
-          :style="{
-            background: theme === 'dark' ? 'var(--white-primary)' : 'var(--black-primary)',
-            color: theme === 'dark' ? 'var(--black-primary)' : 'var(--white-primary)',
-          }"
-        >
-          {{!isLoading ? "Удалить" : ""}}
-          <Spinner size="small" v-if="isLoading"/>
-        </button>
-        <button
-          class="cancel_action"
-          @click="handleClose"
-          :style="{
-            border: theme === 'dark' ? '1px solid var(--white-primary)' : '1px solid var(--black-primary)',
-            color: theme === 'dark' ? 'var(--white-primary)' : 'var(--black-primary)',
-          }"
-        >
-          Отмена
+        <button class="btn" @click="handleClose">Отмена</button>
+        <button class="btn dark" @click="onDeletePub" :class="{ disabled: isLoading }">
+          {{ !isLoading ? 'Удалить' : '' }}
+          <Spinner size="small" v-if="isLoading" />
         </button>
       </div>
     </div>
@@ -95,114 +106,81 @@ watch(() => props.isOpen, (newValue) => {
   bottom: 0;
   width: 100%;
   height: 100vh;
-  visibility: hidden;
-  opacity: 0;
-  z-index: 1003;
 
+  z-index: 1003;
   display: flex;
   align-items: center;
   justify-content: center;
 
-  &.active {
-    background: rgba(black, 0.1);
-    backdrop-filter: blur(4px);
-    visibility: visible;
-    opacity: 1;
+  opacity: 0;
+  transition: 100ms;
 
-    &.dark-theme {
-      background: rgba(white, 0.1);
-    }
-  }
+  background-color: rgba($black-primary, 0.1);
 }
+
 .modal-content {
   display: flex;
   flex-direction: column;
-  gap: 35px;
+  gap: 24px;
+
   background: $white-primary;
-  width: 500px;
-  position: relative;
-  padding: 40px;
 
-  border-radius: 16px;
+  width: 424px;
+  padding: 24px;
+  border-radius: 12px;
 
-  & > .modal-header{
+  transform: scale(0.8);
+  transition: 100ms;
+
+  & > .modal-header {
     display: flex;
-    flex-direction: column;
-    gap: 20px;
-    & > h1 {
-      font-size: 24px;
-      text-align: center;
+    align-items: center;
+    justify-content: space-between;
+
+    & > h4 {
+      @include h4-text;
     }
-    & > p {
-      font-size: 16px;
-      text-align: center;
-      opacity: 0.6;
-    }
-  }
+    & > .modal-close-button {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 36px;
+      height: 36px;
+      background: $gray-primary;
 
-  & > .modal-actions{
-    display: flex;
-    gap: 20px;
+      border-radius: 6px;
 
-    & > button {
-      width: 100%;
-      padding: 8px;
-      border-radius: 12px;
+      cursor: pointer;
 
-      &.submit_action{
-        color: $white-primary;
-        background-color: $black-primary;
-        &.disabled{
-          opacity: 0.2;
-          pointer-events: none;
-        }
-        &:hover{
-          opacity: 0.9;
-        }
-      }
-      &.cancel_action{
-        color: $black-primary;
-        border: 1px solid rgba($black-primary, 1);
+      & > img {
         opacity: 0.7;
-
-        &:hover{
+      }
+      &:hover {
+        & > img {
           opacity: 1;
         }
       }
     }
   }
 }
-.modal-body{
-  display: flex;
-  flex-direction: column;
-  gap: 5px;
 
-  padding: 20px;
-  border-radius: 16px;
+.main-text {
+  @include main-text;
+  color: rgba($black-primary, 0.6);
 
-  background-color: rgba(gray, 0.1);
-
-  & > p {
-    font-size: 16px;
-    opacity: 0.7;
+  & > span {
+    color: rgba($black-primary, 1);
   }
 }
-.modal-close-button{
-  cursor: pointer;
-  padding: 4px;
-  border-radius: 32px;
-  background: $white-primary;
-  position: absolute;
-  top: 0;
-  right: calc(-36px - 12px);
 
-  opacity: 0.6;
-  &:hover{
-    opacity: 0.8;
-  }
-  & > img {
-    width: 28px;
-    height: 28px;
+.modal-actions {
+  display: flex;
+  gap: 10px;
+
+  & > button {
+    @include button-icon;
+    width: 100%;
+    height: 36px;
   }
 }
 </style>

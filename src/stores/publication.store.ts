@@ -112,7 +112,7 @@ export const usePublicationStore = defineStore('publication', {
         this.error = null
 
         const response: MessageResponse | ErrorResponse = await publicationService.deletePublication(id)
-
+        console.log(response)
         if (isErrorResponse(response)) {
           this.error = response.error
           return null

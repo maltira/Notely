@@ -364,6 +364,7 @@ onUnmounted(() => {
     }
     & > .file-selector {
       @include button-icon;
+      height: 36px;
     }
   }
   & > .divider {
@@ -414,6 +415,7 @@ onUnmounted(() => {
 
       & > button {
         @include button-icon;
+        height: 36px;
       }
     }
   }

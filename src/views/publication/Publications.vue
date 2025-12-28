@@ -1,39 +1,17 @@
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
+import { onMounted } from 'vue'
 import { usePublicationStore } from '@/stores/publication.store.ts'
 import { storeToRefs } from 'pinia'
 import { formatDate } from '@/utils/date_format.ts'
-import type { PublicationEntity } from '@/types/publication.entity.ts'
-import { useNotification } from '@/composables/useNotification.ts'
-import { useUserStore } from '@/stores/user.store.ts'
 import PublicationItem from '@/components/UI/PublicationItem.vue'
 
-const { infoNotification } = useNotification()
-
-const userStore = useUserStore()
 const publicationStore = usePublicationStore()
 
-const { user } = storeToRefs(userStore)
 const { searchPublicationQuery, allPublications, isLoading } = storeToRefs(publicationStore)
 const { fetchAllPublications, setSearchQuery } = publicationStore
 
-const isPublicationModalOpen = ref(false)
-const publicationOpen = ref<PublicationEntity | null>(null)
-
-const togglePublicationModal = (id: number) => {
-  isPublicationModalOpen.value = !isPublicationModalOpen.value
-
-  if (isPublicationModalOpen.value && allPublications.value[id]) {
-    publicationOpen.value = allPublications.value[id]
-  } else {
-    publicationOpen.value = null
-  }
-}
-
 onMounted(async () => {
   await fetchAllPublications()
-
-  console.log(allPublications.value[0]!.PublicationCategories)
 })
 </script>
 
@@ -61,6 +39,7 @@ onMounted(async () => {
     <div class="list-publication" v-if="!isLoading && allPublications.length > 0">
       <PublicationItem
         v-for="p in allPublications"
+        :id="p.id"
         :title="p.title"
         :description="p.description"
         :categories="p.PublicationCategories"

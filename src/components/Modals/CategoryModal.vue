@@ -1,13 +1,13 @@
 <script setup lang="ts">
 import { onMounted, onUnmounted, ref } from 'vue'
 import { useNotification } from '@/composables/useNotification.ts'
-import type { PublicationCategories } from '@/types/publication.entity.ts'
+import type { PublicationCategoriesRequest } from '@/types/category.entity.ts'
 
 const { infoNotification } = useNotification()
 
 interface Props {
   isOpen: boolean
-  categories: Array<PublicationCategories>
+  categories: Array<PublicationCategoriesRequest>
 }
 const props = defineProps<Props>()
 
@@ -41,11 +41,11 @@ const handleKeydown = (event: KeyboardEvent) => {
 
 const addCategory = (el?: string) => {
   if (el) {
-    if (props.categories.filter((e) => e.name === el).length > 0)
+    if (props.categories.filter((e) => e.Category.name === el).length > 0)
       infoNotification('Вы уже выбрали данную категория уже выбрана')
     else emit('selectCategory', el)
   } else {
-    if (props.categories.filter((e) => e.name === category.value).length > 0)
+    if (props.categories.filter((e) => e.Category.name === category.value).length > 0)
       infoNotification('Вы уже выбрали данную категория уже выбрана')
     else if (category.value) emit('selectCategory', category.value)
   }

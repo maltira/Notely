@@ -18,7 +18,7 @@ export function useNotification() {
     const id = idCounter++
     const notification = {
       id,
-      duration: 3000,
+      duration: 6000,
       exiting: false,
       ...options,
     }

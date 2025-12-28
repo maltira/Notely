@@ -13,6 +13,49 @@ const routes: RouteRecordRaw[] = [
     path: '/',
     name: 'Publications',
     component: Publications,
+    children: [
+      {
+        path: '/pub/edit/:id',
+        component: Publications,
+        name: 'PublicationEdit',
+        props: true,
+      },
+    ],
+  },
+  {
+    path: '/publication/create',
+    name: 'CreatePublication',
+    component: NewPublication,
+    meta: {
+      hideHeader: true,
+    },
+    beforeEnter: async (to, from, next) => {
+      const userStore = useUserStore()
+      await userStore.fetchCurrentUser()
+      if (userStore.user) {
+        next()
+      } else {
+        next('/404')
+      }
+    },
+  },
+  {
+    path: '/publication/edit/:id',
+    name: 'EditPublication',
+    component: NewPublication,
+    meta: {
+      hideHeader: true,
+    },
+    props: true,
+    beforeEnter: async (to, from, next) => {
+      const userStore = useUserStore()
+      await userStore.fetchCurrentUser()
+      if (userStore.user) {
+        next()
+      } else {
+        next('/404')
+      }
+    },
   },
   {
     path: '/admin',
@@ -22,23 +65,6 @@ const routes: RouteRecordRaw[] = [
       const userStore = useUserStore()
       await userStore.fetchCurrentUser()
       if (userStore.user?.Group?.name === 'Админ') {
-        next()
-      } else {
-        next('/404')
-      }
-    },
-  },
-  {
-    path: '/publication/create',
-    name: 'Create Publication',
-    component: NewPublication,
-    meta: {
-      hideHeader: true,
-    },
-    beforeEnter: async (to, from, next) => {
-      const userStore = useUserStore()
-      await userStore.fetchCurrentUser()
-      if (userStore.user) {
         next()
       } else {
         next('/404')

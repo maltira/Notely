@@ -2,20 +2,26 @@
 import type { UserEntity } from '@/types/user.entity.ts'
 import { useUserStore } from '@/stores/user.store.ts'
 import { storeToRefs } from 'pinia'
-import { onMounted, onUnmounted } from 'vue'
-import type { PublicationCategories } from '@/types/publication.entity.ts'
+import { onMounted, onUnmounted, ref } from 'vue'
+import type {
+  PublicationCategories,
+  PublicationCategoriesRequest,
+} from '@/types/category.entity.ts'
+import DeleteModal from '@/components/Modals/DeleteModal.vue'
+import router from '@/router'
 
 const userStore = useUserStore()
 const { user } = storeToRefs(userStore)
 
 // ? Параметры
 interface Props {
+  id?: string
   title: string
   description: string
   background_color?: string
   author: UserEntity
   created_at: Date | string
-  categories: Array<PublicationCategories>
+  categories: Array<PublicationCategories | PublicationCategoriesRequest>
 
   isWide?: boolean
 
@@ -29,7 +35,7 @@ const props = withDefaults(defineProps<Props>(), {
 const emit = defineEmits<{
   closeBgPicker: []
   toggleBgPicker: []
-  toggleCategoryPicker: [category: PublicationCategories, id: string]
+  toggleCategoryPicker: [category: PublicationCategoriesRequest, id: string]
 }>()
 
 const handleHover = (e: MouseEvent) => {
@@ -60,11 +66,20 @@ const handleBackgroundClick = (e: MouseEvent) => {
   }
 }
 
+const isDeleteModalOpen = ref<boolean>(false)
+
+const toggleDeleteModal = () => {
+  isDeleteModalOpen.value = !isDeleteModalOpen.value
+}
+
+const editPub = (id: string) => {
+  router.push('/publication/edit/' + id)
+}
+
 onMounted(() => {
   document.addEventListener('mousemove', handleHover)
   document.addEventListener('click', handleBackgroundClick)
 })
-
 onUnmounted(() => {
   document.removeEventListener('mousemove', handleHover)
   document.removeEventListener('click', handleBackgroundClick)
@@ -77,7 +92,7 @@ onUnmounted(() => {
     class="publication-container"
     :style="{ background: background_color, width: isWide ? '100%' : '341px' }"
   >
-    <div class="content" id="publication_content">
+    <div class="content" id="publication_content" :class="{ 'view-mode-content': isViewMode }">
       <div class="content_categoies">
         <div
           v-if="categories.length > 0"
@@ -109,11 +124,29 @@ onUnmounted(() => {
       <p class="author-name">{{ author.name }}</p>
       <div class="actions" v-if="!isViewMode">
         <img v-if="user && author.id != user.id" src="/icons/add-circle.svg" alt="subscribe" />
-        <img v-if="user && author.id === user.id" src="/icons/edit-2.svg" alt="edit" />
-        <img v-if="user && author.id === user.id" src="/icons/delete.svg" alt="edit" />
+        <img
+          v-if="user && author.id === user.id"
+          @click="id ? editPub(id) : null"
+          src="/icons/edit-2.svg"
+          alt="edit"
+        />
+        <img
+          v-if="user && author.id === user.id"
+          @click="id ? toggleDeleteModal() : null"
+          src="/icons/delete.svg"
+          alt="edit"
+        />
       </div>
     </div>
   </div>
+
+  <DeleteModal
+    v-if="isDeleteModalOpen && id"
+    :publication_id="id"
+    :author_id="author.id"
+    :publication_title="title"
+    @close="isDeleteModalOpen = false"
+  />
 </template>
 
 <style scoped lang="scss">
@@ -140,6 +173,10 @@ onUnmounted(() => {
   padding: 28px;
   border-radius: 20px;
   background: $white-primary;
+
+  height: 100%;
+
+  cursor: pointer;
 
   & > .content_categoies {
     display: flex;
@@ -196,6 +233,19 @@ onUnmounted(() => {
       overflow: hidden;
 
       opacity: 0.8;
+    }
+  }
+
+  &:hover {
+    transform: translateY(2px);
+    box-shadow: 0 8px 24px 0 rgba($black-primary, 0.05);
+  }
+
+  &.view-mode-content {
+    cursor: default;
+    &:hover {
+      transform: none;
+      box-shadow: none;
     }
   }
 }
