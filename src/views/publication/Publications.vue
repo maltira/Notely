@@ -1,10 +1,11 @@
 <script setup lang="ts">
-import { onMounted } from 'vue'
+import { onMounted, ref } from 'vue'
 import { usePublicationStore } from '@/stores/publication.store.ts'
 import { storeToRefs } from 'pinia'
 import { formatDate } from '@/utils/date_format.ts'
 import PublicationItem from '@/components/UI/PublicationItem.vue'
 import { usePubViewStore } from '@/stores/view.store.ts'
+import PublicationModal from '@/components/Modals/PublicationModal.vue'
 
 const pubViewStore = usePubViewStore()
 const publicationStore = usePublicationStore()
@@ -13,6 +14,14 @@ const { viewMode } = storeToRefs(pubViewStore)
 
 const { searchPublicationQuery, allPublications, isLoading } = storeToRefs(publicationStore)
 const { fetchAllPublications, setSearchQuery } = publicationStore
+
+const selectedPublication = ref<string>('')
+const isPublicationOpen = ref<boolean>(false)
+
+const togglePublicationModal = (id: string) => {
+  isPublicationOpen.value = !isPublicationOpen.value
+  selectedPublication.value = id
+}
 
 onMounted(async () => {
   await fetchAllPublications()
@@ -40,7 +49,7 @@ onMounted(async () => {
         <p v-if="searchPublicationQuery">Найдено публикаций: {{ allPublications.length }}</p>
       </div>
     </div>
-    <div class="list-publication" v-if="!isLoading && allPublications.length > 0">
+    <div class="list-publication" v-if="allPublications.length > 0">
       <PublicationItem
         v-for="p in allPublications"
         :id="p.id"
@@ -50,8 +59,9 @@ onMounted(async () => {
         :created_at="formatDate(p.created_at, 'DD/MM/YYYY HH:mm')"
         :author="p.User"
         :background_color="p.background_color"
-
         :isWide="viewMode === 'single'"
+
+        @openModal="togglePublicationModal"
       >
       </PublicationItem>
     </div>
@@ -59,6 +69,12 @@ onMounted(async () => {
       Ничего не найдено
     </p>
   </div>
+
+  <PublicationModal
+    v-if="selectedPublication && isPublicationOpen"
+    :pub_id="selectedPublication"
+    @close="isPublicationOpen = false"
+  />
 </template>
 
 <style scoped lang="scss">

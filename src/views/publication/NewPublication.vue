@@ -20,7 +20,7 @@ import type {
 } from '@/types/category.entity.ts'
 
 interface Props {
-  id: string
+  id?: string
 }
 const props = defineProps<Props>()
 
@@ -127,7 +127,7 @@ const CreatePublication = async () => {
 
 const SavePublication = async () => {
   const req: PublicationUpdateRequest = {
-    id: props.id,
+    id: props.id!,
     title: title.value,
     description: description.value,
     background_color: backgroundColor.value,

@@ -36,6 +36,8 @@ const emit = defineEmits<{
   closeBgPicker: []
   toggleBgPicker: []
   toggleCategoryPicker: [category: PublicationCategoriesRequest, id: string]
+
+  openModal: [id: string]
 }>()
 
 const handleHover = (e: MouseEvent) => {
@@ -54,7 +56,6 @@ const handleHover = (e: MouseEvent) => {
 const handleBackgroundClick = (e: MouseEvent) => {
   const publication_container = document.getElementById('publication_container')
   const publication_content = document.getElementById('publication_content')
-
   if (
     publication_container?.contains(e.target as Node) &&
     !publication_content?.contains(e.target as Node) &&
@@ -67,7 +68,6 @@ const handleBackgroundClick = (e: MouseEvent) => {
 }
 
 const isDeleteModalOpen = ref<boolean>(false)
-
 const toggleDeleteModal = () => {
   isDeleteModalOpen.value = !isDeleteModalOpen.value
 }
@@ -77,12 +77,16 @@ const editPub = (id: string) => {
 }
 
 onMounted(() => {
-  document.addEventListener('mousemove', handleHover)
-  document.addEventListener('click', handleBackgroundClick)
+  if (props.isViewMode) {
+    document.addEventListener('mousemove', handleHover)
+    document.addEventListener('click', handleBackgroundClick)
+  }
 })
 onUnmounted(() => {
-  document.removeEventListener('mousemove', handleHover)
-  document.removeEventListener('click', handleBackgroundClick)
+  if (props.isViewMode) {
+    document.removeEventListener('mousemove', handleHover)
+    document.removeEventListener('click', handleBackgroundClick)
+  }
 })
 </script>
 
@@ -92,7 +96,12 @@ onUnmounted(() => {
     class="publication-container"
     :style="{ background: background_color, width: isWide ? '100%' : '341px' }"
   >
-    <div class="content" id="publication_content" :class="{ 'view-mode-content': isViewMode }">
+    <div
+      class="content"
+      id="publication_content"
+      :class="{ 'view-mode-content': isViewMode }"
+      @click="id ? emit('openModal', id) : null"
+    >
       <div class="content_categoies">
         <div
           v-if="categories.length > 0"
