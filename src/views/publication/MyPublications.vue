@@ -7,15 +7,19 @@ import PublicationItem from '@/components/UI/PublicationItem.vue'
 import { usePubViewStore } from '@/stores/view.store.ts'
 import PublicationModal from '@/components/Modals/PublicationModal.vue'
 import Skeleton from '@/components/UI/Skeleton.vue'
+import type { PublicationEntity } from '@/types/publication.entity.ts'
+import { useUserStore } from '@/stores/user.store.ts'
 
+const userStore = useUserStore()
 const pubViewStore = usePubViewStore()
 const publicationStore = usePublicationStore()
 
 const { viewMode } = storeToRefs(pubViewStore)
 
-const { searchPublicationQuery, allPublications, isLoading } = storeToRefs(publicationStore)
-const { fetchAllPublications, setSearchQuery } = publicationStore
+const { searchPublicationQuery, isLoading } = storeToRefs(publicationStore)
+const { fetchPublicationsByUserID, setSearchQuery } = publicationStore
 
+const allPublications = ref<PublicationEntity[] | null>(null)
 const selectedPublication = ref<string>('')
 const isPublicationOpen = ref<boolean>(false)
 
@@ -25,7 +29,8 @@ const togglePublicationModal = (id: string) => {
 }
 
 onMounted(async () => {
-  await fetchAllPublications()
+  allPublications.value = await fetchPublicationsByUserID(userStore.user!.id)
+  console.log(allPublications.value![0]!.User)
 })
 </script>
 
@@ -47,7 +52,9 @@ onMounted(async () => {
               : 'Все публикации'
           }}
         </h1>
-        <p v-if="searchPublicationQuery">Найдено публикаций: {{ allPublications.length }}</p>
+        <p v-if="allPublications && searchPublicationQuery">
+          Найдено публикаций: {{ allPublications && allPublications.length }}
+        </p>
       </div>
     </div>
     <div class="list-publication skeleton" v-if="isLoading">
@@ -67,7 +74,7 @@ onMounted(async () => {
         border-radius="20px"
       />
     </div>
-    <div class="list-publication" v-if="allPublications.length > 0">
+    <div class="list-publication" v-if="allPublications && allPublications.length > 0">
       <PublicationItem
         v-for="p in allPublications"
         :id="p.id"
@@ -75,7 +82,7 @@ onMounted(async () => {
         :description="p.description"
         :categories="p.PublicationCategories"
         :created_at="formatDate(p.created_at, 'DD/MM/YYYY HH:mm')"
-        :author="p.User"
+        :author="userStore.user!"
         :background_color="p.background_color"
         :isWide="viewMode === 'single'"
         @openModal="togglePublicationModal"
@@ -83,7 +90,10 @@ onMounted(async () => {
       </PublicationItem>
     </div>
 
-    <p v-if="!isLoading && allPublications.length === 0" class="search-result-none">
+    <p
+      v-if="!isLoading && allPublications && allPublications.length === 0"
+      class="search-result-none"
+    >
       Ничего не найдено
     </p>
   </div>

@@ -1,12 +1,14 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import type { RouteRecordRaw } from 'vue-router'
 import Publications from '@/views/publication/Publications.vue'
-import LoginView from '@/views/LoginView.vue'
+import LoginView from '@/views/auth/LoginView.vue'
 import AdminView from '@/views/AdminView.vue'
 import { useUserStore } from '@/stores/user.store.ts'
 import NotFoundView from '@/views/NotFoundView.vue'
-import RegistrationView from '@/views/RegistrationView.vue'
+import RegistrationView from '@/views/auth/RegistrationView.vue'
 import NewPublication from '@/views/publication/NewPublication.vue'
+import GreetingView from '@/views/GreetingView.vue'
+import MyPublications from '@/views/publication/MyPublications.vue'
 
 const routes: RouteRecordRaw[] = [
   {
@@ -35,7 +37,7 @@ const routes: RouteRecordRaw[] = [
       if (userStore.user) {
         next()
       } else {
-        next('/404')
+        next('/login')
       }
     },
   },
@@ -53,10 +55,26 @@ const routes: RouteRecordRaw[] = [
       if (userStore.user) {
         next()
       } else {
-        next('/404')
+        next('/login')
       }
     },
   },
+  {
+    path: '/publications/me',
+    name: 'MyPublication',
+    component: MyPublications,
+    beforeEnter: async (to, from, next) => {
+      const userStore = useUserStore()
+      await userStore.fetchCurrentUser()
+      if (userStore.user) {
+        next()
+      } else {
+        next('/login')
+      }
+    },
+  },
+
+
   {
     path: '/admin',
     name: 'Admin-panel',
@@ -66,11 +84,11 @@ const routes: RouteRecordRaw[] = [
       await userStore.fetchCurrentUser()
       if (userStore.user?.Group?.name === 'Админ') {
         next()
-      } else {
-        next('/404')
       }
     },
   },
+
+
   {
     path: '/login',
     name: 'Authorization',
@@ -87,14 +105,19 @@ const routes: RouteRecordRaw[] = [
       hideHeader: true,
     },
   },
+
+
   {
-    path: '/404',
-    name: 'NotFound',
-    component: NotFoundView,
+    path: '/greeting',
+    name: 'Greeting',
+    component: GreetingView,
   },
+
+
   {
     path: '/:pathMatch(.*)*',
-    redirect: '/404',
+    name: 'NotFound',
+    component: NotFoundView,
   },
 ]
 

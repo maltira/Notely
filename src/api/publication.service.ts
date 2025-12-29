@@ -8,7 +8,15 @@ class PublicationService {
   async fetchAll(): Promise<PublicationEntity[] | ErrorResponse> {
     const response = await fetch(`${this.baseURL}/publication/all`, {
       method: 'GET',
-      credentials: "include"
+      credentials: 'include',
+    })
+    return response.json()
+  }
+
+  async fetchByUserID(id: string): Promise<PublicationEntity[] | ErrorResponse> {
+    const response = await fetch(`${this.baseURL}/publication/user/${id}/all`, {
+      method: 'GET',
+      credentials: 'include',
     })
     return response.json()
   }
@@ -16,7 +24,7 @@ class PublicationService {
   async fetchByID(id: string): Promise<PublicationEntity | ErrorResponse> {
     const response = await fetch(`${this.baseURL}/publication/${id}`, {
       method: 'GET',
-      credentials: "include"
+      credentials: 'include',
     })
     return response.json()
   }
@@ -24,8 +32,8 @@ class PublicationService {
   async createPublication(req: PublicationRequest): Promise<MessageResponse | ErrorResponse> {
     const response = await fetch(`${this.baseURL}/publication/create`, {
       method: 'POST',
-      credentials: "include",
-      body: JSON.stringify(req)
+      credentials: 'include',
+      body: JSON.stringify(req),
     })
     return response.json()
   }
@@ -33,7 +41,7 @@ class PublicationService {
   async deletePublication(id: string): Promise<MessageResponse | ErrorResponse> {
     const response = await fetch(`${this.baseURL}/publication/${id}`, {
       method: 'DELETE',
-      credentials: "include"
+      credentials: 'include',
     })
     return response.json()
   }
@@ -41,8 +49,8 @@ class PublicationService {
   async updatePublication(req: PublicationUpdateRequest): Promise<MessageResponse | ErrorResponse> {
     const response = await fetch(`${this.baseURL}/publication/update`, {
       method: 'PUT',
-      credentials: "include",
-      body: JSON.stringify(req)
+      credentials: 'include',
+      body: JSON.stringify(req),
     })
     return response.json()
   }

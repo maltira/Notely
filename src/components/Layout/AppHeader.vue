@@ -22,11 +22,31 @@ const { logout } = authStore
 const { isAuthenticated } = storeToRefs(authStore)
 const { user } = storeToRefs(userStore)
 
-const routes = [
+interface routeInterface {
+  group: string
+  path: string
+  name: string
+  icon: string
+
+  hideSearch?: boolean
+  hideCreate?: boolean
+  hideFilters?: boolean
+  hideViews?: boolean
+}
+
+const routes: routeInterface[] = [
+  {
+    group: 'Главная',
+    path: '/greeting',
+    name: 'Добро пожаловать!',
+    icon: 'mood.svg',
+    hideFilters: true,
+    hideViews: true,
+  },
   { group: 'Главная', path: '/', name: 'Все публикации', icon: 'home.svg' },
   { group: 'Главная', path: '/categories', name: 'Категории', icon: 'category.svg' },
   { group: 'Главная', path: '/authors', name: 'Авторы', icon: 'user.svg' },
-  { group: 'Личное', path: '/my-publications', name: 'Мои публикации', icon: 'box.svg' },
+  { group: 'Личное', path: '/publications/me', name: 'Мои публикации', icon: 'box.svg' },
   { group: 'Личное', path: '/drafts', name: 'Черновики', icon: 'page.svg' },
   { group: 'Личное', path: '/saved', name: 'Сохраненное', icon: 'saved.svg' },
   { group: 'Личное', path: '/subscriptions', name: 'Мои подписки', icon: 'user-check.svg' },
@@ -119,6 +139,7 @@ const currentRoute = computed(() => {
           class="search-record"
           :class="{ active: search }"
           @click="toggleSearch"
+          v-if="!currentRoute!.hideSearch"
         >
           <img src="/icons/search.svg" alt="add" />
           <input
@@ -133,18 +154,18 @@ const currentRoute = computed(() => {
         </form>
         <div class="buttons">
           <button
-            v-if="isAuthenticated"
+            v-if="isAuthenticated && !currentRoute!.hideCreate"
             class="btn add"
             @click="router.push('/publication/create')"
           >
             <img src="/icons/add.svg" alt="add" />
             Создать запись
           </button>
-          <button class="btn filter">
+          <button class="btn filter" v-if="!currentRoute!.hideFilters">
             <img src="/icons/filter.svg" alt="filter" />
             Фильтры
           </button>
-          <button class="btn-select-view">
+          <button class="btn-select-view" v-if="!currentRoute!.hideViews">
             <img
               src="/icons/four-block.svg"
               :class="{ active: viewMode === 'multi' }"
@@ -330,6 +351,7 @@ const currentRoute = computed(() => {
 
     & > .buttons {
       display: flex;
+      align-items: center;
       gap: 8px;
 
       & > .btn {
@@ -338,12 +360,16 @@ const currentRoute = computed(() => {
 
       & > .btn-select-view {
         display: flex;
+        align-items: center;
+
         gap: 10px;
 
         background: $gray-primary;
-        border: 1px solid rgba($black-primary, 0.05);
+        border: 1px solid rgba($black-primary, 0.1);
         border-radius: 8px;
-        padding: 12px;
+        padding: 10px 12px;
+
+        height: 40px;
 
         & > img {
           width: 20px;

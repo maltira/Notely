@@ -42,6 +42,7 @@ import router from '@/router'
 
   & > button {
     @include button-icon;
+    height: 36px;
   }
 }
 </style>

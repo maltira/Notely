@@ -152,7 +152,7 @@ onMounted(async () => {
   opacity: 0;
   transition: 100ms;
 
-  overflow: scroll;
+  overflow-y: scroll;
 
   background-color: $gray-primary;
 }

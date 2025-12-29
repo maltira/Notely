@@ -6,6 +6,7 @@ import { useUserStore } from '@/stores/user.store.ts'
 import { storeToRefs } from 'pinia'
 import type { UpdatedGreeting } from '@/types/user.entity.ts'
 import { useNotification } from '@/composables/useNotification.ts'
+import router from '@/router'
 
 const route = useRoute()
 
@@ -28,7 +29,7 @@ const routes = [
     { path: '/authors', name: 'Авторы', icon: 'user.svg' },
   ],
   [
-    { path: '/my-publications', name: 'Мои публикации', icon: 'box.svg' },
+    { path: '/publications/me', name: 'Мои публикации', icon: 'box.svg' },
     { path: '/drafts', name: 'Черновики', icon: 'page.svg' },
     { path: '/saved', name: 'Сохраненное', icon: 'saved.svg' },
     { path: '/subscriptions', name: 'Мои подписки', icon: 'user-check.svg' },
@@ -45,6 +46,10 @@ const updateGreeting = async () => {
 
   if (error.value) {
     infoNotification('❌' + error.value)
+  } else {
+    if (route.path === '/greeting') {
+      await router.push('/')
+    }
   }
 }
 
@@ -64,8 +69,8 @@ onMounted(() => {
           <RouterLink
             to="/greeting"
             class="tab-container close"
-            :class="{ active: route.path === 'greeting' }"
-            v-if="!isGreetingClosed"
+            :class="{ active: route.path === '/greeting' }"
+            v-if="user && !isGreetingClosed"
           >
             <div class="route">
               <img src="/icons/mood.svg" alt="img" />

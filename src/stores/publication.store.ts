@@ -15,18 +15,18 @@ export const usePublicationStore = defineStore('publication', {
 
   getters: {
     allPublications: (state) => {
-      if (!state.searchPublicationQuery){
-        return [...state.publications]
-          .sort((a, b) =>
-            new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+      if (!state.searchPublicationQuery) {
+        return [...state.publications].sort(
+          (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
+        )
       }
 
       const query = state.searchPublicationQuery.toLowerCase()
-      return state.publications.filter(pub =>
-        pub.title.toLowerCase().includes(query) ||
-        pub.description.toLowerCase().includes(query)
+      return state.publications.filter(
+        (pub) =>
+          pub.title.toLowerCase().includes(query) || pub.description.toLowerCase().includes(query),
       )
-    }
+    },
   },
 
   actions: {
@@ -47,12 +47,10 @@ export const usePublicationStore = defineStore('publication', {
         }
 
         return response
-      }
-      catch {
+      } catch {
         this.error = 'Ошибка получения публикации, повторите попытку'
         return null
-      }
-      finally {
+      } finally {
         this.isLoading = false
       }
     },
@@ -71,12 +69,29 @@ export const usePublicationStore = defineStore('publication', {
 
         this.publications = response
         return response
-      }
-      catch {
+      } catch {
         this.error = 'Ошибка получения публикаций, повторите попытку'
         return null
+      } finally {
+        this.isLoading = false
       }
-      finally {
+    },
+    async fetchPublicationsByUserID(id: string): Promise<PublicationEntity[] | null> {
+      try {
+        this.isLoading = true
+        this.error = null
+
+        const response: PublicationEntity[] | ErrorResponse = await publicationService.fetchByUserID(id)
+        if (isErrorResponse(response)) {
+          this.error = response.error
+          return null
+        }
+
+        return response
+      } catch {
+        this.error = 'Ошибка получения публикаций, повторите попытку'
+        return null
+      } finally {
         this.isLoading = false
       }
     },
@@ -86,7 +101,8 @@ export const usePublicationStore = defineStore('publication', {
         this.isLoading = true
         this.error = null
 
-        const response: MessageResponse | ErrorResponse = await publicationService.createPublication(req)
+        const response: MessageResponse | ErrorResponse =
+          await publicationService.createPublication(req)
 
         if (isErrorResponse(response)) {
           this.error = response.error
@@ -96,12 +112,10 @@ export const usePublicationStore = defineStore('publication', {
         await this.fetchAllPublications()
 
         return true
-      }
-      catch {
+      } catch {
         this.error = 'Ошибка созданий публикации, повторите попытку'
         return null
-      }
-      finally {
+      } finally {
         this.isLoading = false
       }
     },
@@ -111,7 +125,8 @@ export const usePublicationStore = defineStore('publication', {
         this.isLoading = true
         this.error = null
 
-        const response: MessageResponse | ErrorResponse = await publicationService.deletePublication(id)
+        const response: MessageResponse | ErrorResponse =
+          await publicationService.deletePublication(id)
         console.log(response)
         if (isErrorResponse(response)) {
           this.error = response.error
@@ -121,12 +136,10 @@ export const usePublicationStore = defineStore('publication', {
         await this.fetchAllPublications()
 
         return true
-      }
-      catch {
+      } catch {
         this.error = 'Ошибка удаления публикации, повторите попытку'
         return null
-      }
-      finally {
+      } finally {
         this.isLoading = false
       }
     },
@@ -136,9 +149,10 @@ export const usePublicationStore = defineStore('publication', {
         this.isLoading = true
         this.error = null
 
-        const response: MessageResponse | ErrorResponse = await publicationService.updatePublication(req)
+        const response: MessageResponse | ErrorResponse =
+          await publicationService.updatePublication(req)
 
-        if (isErrorResponse(response)){
+        if (isErrorResponse(response)) {
           this.error = response.error
           return null
         }
@@ -146,14 +160,12 @@ export const usePublicationStore = defineStore('publication', {
         await this.fetchAllPublications()
 
         return true
-      }
-      catch {
+      } catch {
         this.error = 'Ошибка изменения публикации, повторите попытку'
         return null
-      }
-      finally {
+      } finally {
         this.isLoading = false
       }
-    }
-  }
+    },
+  },
 })

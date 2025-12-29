@@ -1,63 +1,65 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
-import { useAuthStore } from '@/stores/auth.store'
-import type { AuthRequest } from '@/types/auth.entity'
+import { useAuthStore } from '@/stores/auth.store.ts'
 import { storeToRefs } from 'pinia'
-import { useNotification } from '@/composables/useNotification'
+import { useNotification } from '@/composables/useNotification.ts'
 import { useRouter } from 'vue-router'
 import Spinner from '@/components/UI/Spinner.vue'
-import { useUserStore } from '@/stores/user.store.ts'
-
-const authStore = useAuthStore()
-const userStore = useUserStore()
-const { isLoading, error } = storeToRefs(authStore)
-const { user } = storeToRefs(userStore)
-const { login } = authStore
-const { infoNotification } = useNotification()
+import type { CreateUserRequest } from '@/types/user.entity.ts'
 
 const router = useRouter()
+const name = ref('')
 const email = ref('')
 const password = ref('')
+const confirmPassword = ref('')
 const isPasswordVisible = ref(false)
+const isConfirmPasswordVisible = ref(false)
+const authStore = useAuthStore()
+const { isLoading, error } = storeToRefs(authStore)
+const { registration } = authStore
+const { infoNotification } = useNotification()
 
-const auth = async () => {
-  if (email.value && password.value) {
-    const req: AuthRequest = {
+const registrationUser = async () => {
+  if (name.value && email.value && password.value && password.value == confirmPassword.value) {
+    const req: CreateUserRequest = {
+      name: name.value,
       email: email.value,
       password: password.value,
     }
-    await login(req)
+    await registration(req)
 
     if (error.value) {
       infoNotification('Ошибка: ' + error.value.toString())
     } else {
-      await router.push('/')
-      infoNotification(`👋 ${user.value!.name}, рады приветствовать тебя в Notely!`)
+      await router.push('/greeting')
+      infoNotification('👋 Успешная регистрация, добро пожаловать в Notely!')
     }
   } else {
-    infoNotification('Введите корректные данные, возможно вы указали не все поля')
+    infoNotification(
+      'Указаны неверные данные, возможно вы указали не все поля либо пароли не совпадают',
+    )
   }
 }
 
-const goToReg = () => {
-  const login_block = document.getElementById('login_block')
-  if (login_block) {
-    login_block.style.transition = '50ms ease-out'
-    login_block.style.opacity = '0'
-    login_block.style.transform = 'scale(0.8)'
+const goToBack = () => {
+  const reg_block = document.getElementById('reg_block')
+  if (reg_block) {
+    reg_block.style.transition = '50ms ease-out'
+    reg_block.style.opacity = '0'
+    reg_block.style.transform = 'scale(0.8)'
     setTimeout(() => {
-      router.push('/registration')
+      router.back()
     }, 50)
   }
 }
 onMounted(() => {
-  const login_block = document.getElementById('login_block')
+  const reg_block = document.getElementById('reg_block')
   const anim = document.getElementsByClassName('anim')
-  if (login_block && anim) {
+  if (reg_block && anim) {
     setTimeout(() => {
-      login_block.style.transition = '100ms ease-out'
-      login_block.style.opacity = '1'
-      login_block.style.transform = 'scale(1)'
+      reg_block.style.transition = '100ms ease-out'
+      reg_block.style.opacity = '1'
+      reg_block.style.transform = 'scale(1)'
     }, 1)
 
     setTimeout(() => {
@@ -75,25 +77,34 @@ onMounted(() => {
 
 <template>
   <div class="login-container">
-    <div id="login_block" class="login_block">
+    <div id="reg_block" class="login_block">
       <div class="login_title anim">
         <div class="logotype">N</div>
         <div class="text">
-          <h1>Вход в аккаунт</h1>
-          <p>Введите ваш email и пароль ниже для входа.</p>
+          <h1>Создать аккаунт</h1>
+          <p>Укажите ваши данные для регистрации.</p>
         </div>
       </div>
       <div class="login_inputs anim">
         <div class="input-form">
+          <p class="input-info">Как к вам обращаться? <span class="required">*</span></p>
+          <input
+            id="name-input"
+            v-model="name"
+            required
+            type="text"
+            placeholder="Романтичный холерик"
+            :class="{ active: name }"
+          />
+        </div>
+        <div class="input-form">
           <p class="input-info">Email <span class="required">*</span></p>
           <input
             id="email-input"
-            name="email"
             v-model="email"
-            autocomplete="off"
             required
             type="email"
-            placeholder="Введите email"
+            placeholder="Укажите ваш email"
             :class="{ active: email }"
           />
         </div>
@@ -102,12 +113,12 @@ onMounted(() => {
           <div class="password-input">
             <input
               id="password-input"
-              name="password"
+              name="password-in1"
               v-model="password"
-              autocomplete="off"
               required
               :type="isPasswordVisible ? 'text' : 'password'"
               placeholder="Введите пароль"
+              autocomplete="off"
               :class="{ active: password }"
             />
             <img
@@ -117,28 +128,39 @@ onMounted(() => {
             />
           </div>
         </div>
-      </div>
-      <div class="buttons anim">
-        <div class="action-buttons">
-          <button
-            class="login_submit"
-            @click="auth"
-            :class="{ disabled: !email || !password || isLoading }"
-          >
-            {{ isLoading ? '' : 'Войти' }}
-            <Spinner size="small" v-if="isLoading" />
-            <img v-if="!isLoading" src="/icons/arr-white.svg" alt="arrow" />
-          </button>
-          <button class="continue" @click="router.push('/')" :class="{ disabled: isLoading }">
-            Продолжить как читатель
-          </button>
+        <div class="input-form">
+          <p class="input-info">Повторите пароль <span class="required">*</span></p>
+          <div class="password-input">
+            <input
+              id="password-input-confirm"
+              name="password-in2"
+              v-model="confirmPassword"
+              required
+              autocomplete="off"
+              :type="isConfirmPasswordVisible ? 'text' : 'password'"
+              placeholder="Введите пароль"
+              :class="{ active: confirmPassword }"
+            />
+            <img
+              :src="isConfirmPasswordVisible ? '/icons/eye-closed.svg' : '/icons/eye.svg'"
+              alt="visible"
+              @click="isConfirmPasswordVisible = !isConfirmPasswordVisible"
+            />
+          </div>
         </div>
-
-        <div class="registration">
-          <p>Нет аккаунта?</p>
-          <p class="link" @click="goToReg">Создать новый</p>
-        </div>
       </div>
+      <div class="btn-back anim" @click="goToBack">
+        <img class="btn-back" src="/icons/arr-black.svg" alt="arrow" />
+      </div>
+      <button
+        class="login_submit"
+        @click="registrationUser"
+        :class="{ disabled: !name || !email || !password || !confirmPassword || isLoading }"
+      >
+        {{ isLoading ? '' : 'Создать аккаунт' }}
+        <Spinner size="small" v-if="isLoading" />
+        <img v-if="!isLoading" src="/icons/arr-white.svg" alt="arrow" />
+      </button>
     </div>
   </div>
 </template>
@@ -163,9 +185,10 @@ onMounted(() => {
 .login_block {
   display: flex;
   flex-direction: column;
+  position: relative;
 
   gap: 48px;
-  width: 437px;
+  width: 500px;
   padding: 32px 36px;
   border-radius: 12px;
 
@@ -196,7 +219,6 @@ onMounted(() => {
         opacity: 0.5;
       }
     }
-
     & > .logotype {
       width: 44px;
       height: 44px;
@@ -210,6 +232,34 @@ onMounted(() => {
       font-size: 28px;
       font-weight: 700;
       color: $white-primary;
+    }
+  }
+
+  & > .btn-back {
+    padding: 10px;
+    background: $white-primary;
+
+    border: 1px solid rgba($black-primary, 0.1);
+    border-radius: 10px;
+
+    position: absolute;
+    left: -56px;
+    top: 0;
+
+    cursor: pointer;
+
+    & > img {
+      width: 24px;
+      height: 24px;
+      opacity: 0.7;
+
+      transform: rotate(180deg);
+    }
+
+    &:hover {
+      & > img {
+        opacity: 1;
+      }
     }
   }
 }
@@ -261,52 +311,7 @@ onMounted(() => {
   }
 }
 
-.buttons {
-  width: 100%;
-  display: flex;
-  flex-direction: column;
-  gap: 24px;
-
-  & > .action-buttons {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-
-    & > button {
-      &.login_submit {
-        @include big-button();
-      }
-
-      &.continue {
-        @include button-icon();
-      }
-
-      &.disabled {
-        opacity: 0.2;
-        pointer-events: none;
-      }
-    }
-  }
-}
-
-.registration {
-  @include button-text;
-
-  display: flex;
-  gap: 6px;
-  justify-content: center;
-  font-weight: 400;
-
-  & > p {
-    opacity: 0.5;
-  }
-  & > .link {
-    opacity: 0.7;
-    cursor: pointer;
-
-    &:hover {
-      opacity: 0.9;
-    }
-  }
+.login_submit {
+  @include big-button();
 }
 </style>

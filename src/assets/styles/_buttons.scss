@@ -56,7 +56,7 @@
   height: 40px;
 
   background: $gray-primary;
-  border: 1px solid rgba($black-primary, 0.05);
+  border: 1px solid rgba($black-primary, 0.1);
 
   color: rgba($black-primary, 0.7);
   font-weight: 400;
@@ -81,6 +81,7 @@
   &.dark {
     background: $black-primary;
     color: $white-primary;
+    border: none;
 
     &:hover {
       color: rgba($white-primary, 0.8);
@@ -142,9 +143,12 @@
 }
 
 @mixin info-block {
-  @include button-text;
+  @include tag-text;
+
+  font-weight: 500;
 
   display: flex;
+  align-items: center;
   gap: 6px;
 
   padding: 2px 5px;
@@ -153,7 +157,11 @@
   background: $gray-primary;
   color: #7D7D7D;
 
+  width: fit-content;
+
   & > img {
+    width: 16px;
+    height: 16px;
     opacity: 0.5;
   }
 }
