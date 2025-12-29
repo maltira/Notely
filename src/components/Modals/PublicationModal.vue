@@ -1,122 +1,139 @@
 <script setup lang="ts">
-import { ref, watch } from 'vue'
-import { useUserStore } from '@/stores/user.store.ts'
+// ? Параметры
+import { onMounted, ref } from 'vue'
+import type { PublicationEntity } from '@/types/publication.entity.ts'
+import { usePublicationStore } from '@/stores/publication.store.ts'
 import { storeToRefs } from 'pinia'
-import { useThemeStore } from '@/stores/theme.store.ts'
-import type { PublicationEntity} from '@/types/publication.entity.ts'
-import { formatDate } from '@/utils/date_format.ts'
-import { parseCategories } from '@/utils/validate_categories.ts'
-import EditPostModal from '@/components/Modals/EditPostModal.vue'
-
-const themeStore = useThemeStore()
-const { theme } = storeToRefs(themeStore)
+import { useNotification } from '@/composables/useNotification.ts'
+import DeleteModal from '@/components/Modals/DeleteModal.vue'
+import router from '@/router'
+import { useUserStore } from '@/stores/user.store.ts'
 
 const userStore = useUserStore()
 const { user } = storeToRefs(userStore)
 
 interface Props {
-  isOpen: boolean,
-  publication: PublicationEntity | null,
-  onDelete: (id: string) => Promise<void>,
+  pub_id: string
 }
 const props = defineProps<Props>()
-
-const isEditModalOpen = ref(false)
-
-const toggleEditModal = () => {
-  isEditModalOpen.value = !isEditModalOpen.value
-}
-
-// обращение к родителю
-const emit = defineEmits<{ close: [] }>()
+const emit = defineEmits<{
+  close: []
+}>()
 const handleClose = () => {
-  emit('close')
-}
+  const pub_modal_container = document.getElementById('pub_modal_container')
+  const pub_modal_content = document.getElementById('pub_modal_content')
 
-const handleKeydown = (event: KeyboardEvent) => {
-  if (event.key === 'Escape' && props.isOpen) {
-    handleClose()
+  if (pub_modal_container && pub_modal_content) {
+    pub_modal_content.style.transform = 'scale(0.8)'
+    pub_modal_content.style.opacity = '0'
+    pub_modal_container.style.opacity = '0'
   }
+
+  setTimeout(() => {
+    emit('close')
+  }, 100)
 }
 
-// слежка за isOpen
-watch(() => props.isOpen, (newValue) => {
-  if (newValue) {
-    document.addEventListener('keydown', handleKeydown)
-  } else {
-    document.removeEventListener('keydown', handleKeydown)
+const { infoNotification } = useNotification()
+
+const publicationStore = usePublicationStore()
+const { error } = storeToRefs(publicationStore)
+const { fetchPublication } = publicationStore
+
+const publication = ref<PublicationEntity | null>(null)
+
+const isDeleteModalOpen = ref<boolean>(false)
+const toggleDeleteModal = () => {
+  isDeleteModalOpen.value = !isDeleteModalOpen.value
+}
+const editPub = (id: string) => {
+  handleClose()
+  router.push('/publication/edit/' + id)
+}
+
+onMounted(async () => {
+  const pub_modal_container = document.getElementById('pub_modal_container')
+  const pub_modal_content = document.getElementById('pub_modal_content')
+
+  publication.value = await fetchPublication(props.pub_id)
+  if (error.value) {
+    infoNotification('❌ ' + error.value)
+  }
+
+  if (pub_modal_container && pub_modal_content) {
+    setTimeout(() => {
+      pub_modal_container.style.opacity = '1'
+      pub_modal_content.style.transform = 'scale(1)'
+    }, 1)
   }
 })
 </script>
 
 <template>
   <div
-    class="modal-container"
-    :class="{active: isOpen, 'dark-theme': theme === 'dark'}"
-    @click="handleClose"
+    id="pub_modal_container"
+    class="pub_modal_container"
+    :style="{ background: publication ? publication.background_color : '#f6f6f6' }"
   >
-    <div class="modal-content" @click.stop>
-      <div class="modal-action-btn">
-        <div class="modal-btn modal-close-button" @click="handleClose">
-          <img
-            src="/icons/close.svg"
-            alt="close"
-          >
+    <div id="pub_modal_content" class="content">
+      <div class="main_content">
+        <div v-if="publication" class="header-block">
+          <div class="categories">
+            <div
+              v-if="publication.PublicationCategories.length > 0"
+              class="category-item"
+              v-for="el in publication.PublicationCategories"
+              :style="{ background: el.background_color, color: el.text_color }"
+            >
+              {{ el.Category.name }}
+            </div>
+            <div v-else class="publication-item">Ошибка категорий</div>
+          </div>
+          <h1>{{ publication.title }}</h1>
         </div>
-        <div
-          class="modal-btn modal-delete-button"
-          v-if="user && user.Group.name === 'Админ' || props.publication && user && props.publication.user_id === user.id && user.Group.can_publish_posts"
-          @click="props.publication && user && user.Group.name === 'Админ' || props.publication && user && props.publication.user_id === user.id && user.Group.can_publish_posts ? onDelete(props.publication.id) : null"
-        >
-          <img
-            class="delete-publication"
-            src="/icons/delete.svg"
-            alt="del"
-            width="30px"
-          >
-        </div>
-        <div
-          class="modal-btn modal-edit-button"
-          v-if="user && user.Group.name === 'Админ' || props.publication && user && props.publication.user_id === user.id && user.Group.can_publish_posts"
-          @click="props.publication && user && user.Group.name === 'Админ'  || props.publication && user && props.publication.user_id === user.id && user.Group.can_publish_posts? toggleEditModal() : null"
-        >
-          <img
-            class="delete-publication"
-            src="/icons/edit.svg"
-            alt="del"
-            width="30px"
-          >
+        <p v-if="publication" class="description">
+          {{ publication.description }}
+        </p>
+        <div class="close-btn" @click="handleClose">
+          <img src="/icons/close.svg" alt="close" width="24px" />
         </div>
       </div>
-      <div class="modal-body">
-        <div class="modal-body-text">
-          <h2>{{props.publication ? props.publication.title : "Unknown"}}</h2>
-          <p>{{props.publication ? props.publication.description : "Unknown"}}</p>
-          <div class="p-categories" v-if="props.publication && parseCategories(props.publication.categories).length > 0">
-            <div class="category-item"
-                 v-for="(c, i) in parseCategories(props.publication.categories).slice(0, 5)"
-                 :key="i"
-            >
-              <p>{{c}}</p>
-            </div>
+      <div class="footer_content" v-if="publication">
+        <button class="author">{{ publication.User.name }}</button>
+        <div class="actions">
+          <div class="action-item">
+            <img src="/icons/add-circle.svg" alt="add" />
           </div>
-        </div>
-        <div class="modal-body-meta">
-          <div class="author">
-            <img width="16px" :src="theme === 'dark' ? '/icons/user-white.svg' : '/icons/user.svg'" alt="">
-            <p>{{props.publication ? props.publication.User.name : "Unknown"}}</p>
+          <div
+            v-if="user && publication && user.id === publication.User.id"
+            class="action-item"
+            @click="publication ? editPub(publication.id) : null"
+          >
+            <img src="/icons/edit-2.svg" alt="edit" />
           </div>
-          <p>{{props.publication ? formatDate(props.publication.created_at, 'DD/MM/YYYY HH:mm') : "Unknown"}}</p>
+          <div
+            v-if="user && publication && user.id === publication.User.id"
+            class="action-item"
+            @click="toggleDeleteModal"
+          >
+            <img src="/icons/delete.svg" alt="delete" />
+          </div>
         </div>
       </div>
     </div>
   </div>
 
-  <EditPostModal :is-open="isEditModalOpen" :publication="props.publication" @close="isEditModalOpen = false; emit('close')"/>
+  <DeleteModal
+    v-if="isDeleteModalOpen && publication"
+    :publication_id="publication.id"
+    :author_id="publication.User.id"
+    :publication_title="publication.title"
+    @close="isDeleteModalOpen = false"
+  />
 </template>
 
 <style scoped lang="scss">
-.modal-container {
+.pub_modal_container {
   position: fixed;
   top: 0;
   left: 0;
@@ -124,158 +141,142 @@ watch(() => props.isOpen, (newValue) => {
   bottom: 0;
   width: 100%;
   height: 100vh;
-  visibility: hidden;
-  opacity: 0;
-  z-index: 1003;
 
+  padding: 80px 120px;
+
+  z-index: 1003;
   display: flex;
-  align-items: center;
+  align-items: start;
   justify-content: center;
 
-  &.active {
-    background: rgba(black, 0.1);
-    backdrop-filter: blur(4px);
-    visibility: visible;
-    opacity: 1;
+  opacity: 0;
+  transition: 100ms;
 
-    &.dark-theme {
-      background: rgba(white, 0.1);
+  overflow: scroll;
+
+  background-color: $gray-primary;
+}
+
+.content {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 48px;
+
+  width: 100%;
+  min-height: 100%;
+
+  padding: 48px;
+  background: $white-primary;
+  border-radius: 20px;
+
+  box-shadow: 0 0 32px 0 rgba($black-primary, 0.05);
+
+  transform: scale(0.8);
+  transition: 100ms;
+}
+
+.main_content {
+  position: relative;
+
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+
+  & > .header-block {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+
+    & > .categories {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+
+      & > .category-item {
+        @include info-block;
+      }
+    }
+    & > h1 {
+      @include h1-text;
+    }
+  }
+  & > .description {
+    @include main-text;
+    opacity: 0.7;
+  }
+  & > .close-btn {
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 36px;
+    height: 36px;
+    padding: 6px;
+
+    border-radius: 6px;
+    background-color: $gray-primary;
+    cursor: pointer;
+
+    & > img {
+      opacity: 0.7;
+    }
+    &:hover {
+      & > img {
+        opacity: 1;
+      }
     }
   }
 }
-.modal-content {
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-  background: $white-primary;
-  width: 700px;
-  position: relative;
-  padding: 50px 30px;
 
-  border-radius: 16px;
-}
-.modal-body{
+.footer_content {
   display: flex;
-  flex-direction: column;
-  gap: 10px;
+  align-items: center;
+  justify-content: space-between;
 
-  & > div {
+  & > .author {
+    @include button-text;
+
+    background: $gray-primary;
+    padding: 10px 16px;
+    border-radius: 6px;
+
+    color: rgba($black-primary, 0.7);
+    cursor: pointer;
+
+    &:hover {
+      color: rgba($black-primary, 0.99);
+    }
+  }
+  & > .actions {
     display: flex;
+    align-items: center;
+    gap: 10px;
 
-    & p {
-      font-size: 16px;
-    }
+    & > .action-item {
+      display: flex;
+      align-items: center;
+      justify-content: center;
 
-    &.modal-body-text {
-      flex-direction: column;
-      gap: 25px;
+      width: 36px;
+      height: 36px;
 
-      padding: 30px 30px;
-      border-radius: 16px;
-      background-color: rgba(gray, 0.1);
+      padding: 8px;
+      background: $gray-primary;
+      border-radius: 6px;
 
-      max-height: 60vh;
-      overflow-y: scroll;
-      scrollbar-width: thin;
-      scrollbar-color: #292828 #f0f0f000;
+      cursor: pointer;
 
-      & > h2 {
-        font-size: 28px;
-        font-weight: 700;
+      & > img {
+        width: 20px;
+        height: 20px;
+        opacity: 0.5;
       }
 
-      & > p {
-        max-height: 60vh;
-        opacity: 0.7;
-        white-space: pre-line
-      }
-    }
-
-    &.modal-body-meta {
-      justify-content: space-between;
-
-      & > p, & > .author {
-        opacity: 0.7;
-        background: rgba(gray, 0.1);
-        border-radius: 16px;
-        padding: 8px 15px;
-      }
-
-      & > p {
-        opacity: 0.7;
-        padding: 10px 20px;
-        background-color: rgba(gray, 0.1);
-      }
-
-      & > .author {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        cursor: pointer;
-
-        & > p {
-          font-size: 16px;
-        }
+      &:hover {
         & > img {
-          opacity: 0.7;
-        }
-        &:hover{
           opacity: 0.9;
         }
       }
-    }
-  }
-}
-.modal-action-btn{
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-
-  position: absolute;
-  top: 0;
-  right: calc(-36px - 12px);
-}
-.modal-btn {
-  cursor: pointer;
-  border-radius: 32px;
-  background: $white-primary;
-
-  width: 36px;
-  height: 36px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  opacity: 0.6;
-  &:hover{
-    opacity: 0.8;
-  }
-  & > img {
-    width: 28px;
-    height: 28px;
-  }
-
-  &.modal-delete-button, &.modal-edit-button {
-    & > img {
-      width: 24px;
-      height: 24px;
-    }
-  }
-
-}
-
-.p-categories {
-  display: flex;
-  gap: 6px;
-  flex-wrap: wrap;
-
-  & > .category-item {
-    padding: 5px 15px;
-    border-radius: 8px;
-    background: rgba(gray, 0.3);
-    & > p {
-      font-size: 16px;
-      opacity: 0.8;
     }
   }
 }
