@@ -116,7 +116,7 @@ const CreatePublication = async (is_draft: boolean) => {
     categories: categories.value,
     is_draft: is_draft,
   }
-
+  console.log(req.is_draft)
   await createPublication(req)
 
   if (error.value) infoNotification('❌ ' + error.value)

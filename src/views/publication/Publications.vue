@@ -79,6 +79,7 @@ onMounted(async () => {
         :background_color="p.background_color"
         :isWide="viewMode === 'single'"
         @openModal="togglePublicationModal"
+        @deleted="fetchAllPublications"
       >
       </PublicationItem>
     </div>
@@ -91,7 +92,12 @@ onMounted(async () => {
   <PublicationModal
     v-if="selectedPublication && isPublicationOpen"
     :pub_id="selectedPublication"
-    @close="isPublicationOpen = false"
+    @close="
+      () => {
+        isPublicationOpen = false
+        fetchAllPublications()
+      }
+    "
   />
 </template>
 

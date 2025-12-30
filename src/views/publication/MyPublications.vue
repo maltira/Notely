@@ -28,8 +28,11 @@ const togglePublicationModal = (id: string) => {
   selectedPublication.value = id
 }
 
-onMounted(async () => {
+const getPublications = async () => {
   allPublications.value = await fetchPublicationsByUserID(userStore.user!.id)
+}
+onMounted(async () => {
+  await getPublications()
 })
 </script>
 
@@ -37,7 +40,12 @@ onMounted(async () => {
   <div class="publications_page">
     <div class="page-header">
       <div class="search-result-header">
-        <h1>Мои публикации <span v-if="allPublications" :style="{opacity: 0.3}">({{allPublications.length}})</span></h1>
+        <h1>
+          Мои публикации
+          <span v-if="allPublications" :style="{ opacity: 0.3 }"
+            >({{ allPublications.length }})</span
+          >
+        </h1>
       </div>
     </div>
     <div class="list-publication skeleton" v-if="isLoading && !allPublications">
@@ -69,6 +77,7 @@ onMounted(async () => {
         :background_color="p.background_color"
         :isWide="viewMode === 'single'"
         @openModal="togglePublicationModal"
+        @deleted="getPublications"
       >
       </PublicationItem>
     </div>
@@ -84,7 +93,12 @@ onMounted(async () => {
   <PublicationModal
     v-if="selectedPublication && isPublicationOpen"
     :pub_id="selectedPublication"
-    @close="isPublicationOpen = false"
+    @close="
+      () => {
+        isPublicationOpen = false
+        getPublications()
+      }
+    "
   />
 </template>
 

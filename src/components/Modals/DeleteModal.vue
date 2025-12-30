@@ -22,8 +22,11 @@ interface Props {
 const props = defineProps<Props>()
 
 // обращение к родителю
-const emit = defineEmits<{ close: [] }>()
-const handleClose = () => {
+const emit = defineEmits<{
+  close: []
+  deleted: []
+}>()
+const handleClose = (deleted: boolean = false) => {
   const delete_pub_container = document.getElementById('delete_pub_container')
   const delete_pub_content = document.getElementById('delete_pub_content')
 
@@ -31,8 +34,10 @@ const handleClose = () => {
     delete_pub_container.style.opacity = '0'
     delete_pub_content.style.transform = 'scale(0.8)'
   }
+
   setTimeout(() => {
-    emit('close')
+    if (deleted) emit('deleted')
+    else emit('close')
   }, 100)
 }
 
@@ -50,7 +55,7 @@ const onDeletePub = async () => {
       infoNotification('❌ ' + error.value)
     } else {
       infoNotification('😟 Публикация была успешно удалена')
-      handleClose()
+      handleClose(true)
     }
   } else {
     infoNotification('❌ Недостаточно прав для удаления публикации')
@@ -75,11 +80,11 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div id="delete_pub_container" class="modal-container" @click="handleClose">
+  <div id="delete_pub_container" class="modal-container" @click="handleClose()">
     <div id="delete_pub_content" class="modal-content" @click.stop>
       <div class="modal-header">
         <h4>Удалить публикацию</h4>
-        <div class="modal-close-button" @click="handleClose">
+        <div class="modal-close-button" @click="handleClose()">
           <img src="/icons/close.svg" alt="close" width="24px" />
         </div>
       </div>
@@ -87,7 +92,7 @@ onUnmounted(() => {
         Вы уверены, что хотите удалить публикацию <span>«{{ publication_title }}»</span>?
       </p>
       <div class="modal-actions">
-        <button class="btn" @click="handleClose">Отмена</button>
+        <button class="btn" @click="handleClose()">Отмена</button>
         <button class="btn dark" @click="onDeletePub" :class="{ disabled: isLoading }">
           {{ !isLoading ? 'Удалить' : '' }}
           <Spinner size="small" v-if="isLoading" />

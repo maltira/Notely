@@ -38,6 +38,7 @@ const emit = defineEmits<{
   toggleCategoryPicker: [category: PublicationCategoriesRequest, id: string]
 
   openModal: [id: string]
+  deleted: []
 }>()
 
 const handleHover = (e: MouseEvent) => {
@@ -155,6 +156,12 @@ onUnmounted(() => {
     :author_id="author.id"
     :publication_title="title"
     @close="isDeleteModalOpen = false"
+    @deleted="
+      () => {
+        isDeleteModalOpen = false
+        emit('deleted')
+      }
+    "
   />
 </template>
 

@@ -23,6 +23,8 @@ const handleClose = () => {
   const pub_modal_container = document.getElementById('pub_modal_container')
   const pub_modal_content = document.getElementById('pub_modal_content')
 
+  isDeleteModalOpen.value = false
+
   if (pub_modal_container && pub_modal_content) {
     pub_modal_content.style.transform = 'scale(0.8)'
     pub_modal_content.style.opacity = '0'
@@ -87,12 +89,12 @@ onMounted(async () => {
             >
               {{ el.Category.name }}
             </div>
-            <div v-else class="publication-item">Ошибка категорий</div>
+            <div v-else class="category-item">Категории не указаны</div>
           </div>
-          <h1>{{ publication.title }}</h1>
+          <h1>{{ publication.title || 'Заголовок не указан' }}</h1>
         </div>
         <p v-if="publication" class="description">
-          {{ publication.description }}
+          {{ publication.description || 'Описание не указано' }}
         </p>
         <div class="close-btn" @click="handleClose">
           <img src="/icons/close.svg" alt="close" width="24px" />
@@ -101,7 +103,7 @@ onMounted(async () => {
       <div class="footer_content" v-if="publication">
         <button class="author">{{ publication.User.name }}</button>
         <div class="actions">
-          <div class="action-item">
+          <div class="action-item" v-if="user && publication.User.id !== user.id">
             <img src="/icons/add-circle.svg" alt="add" />
           </div>
           <div
@@ -128,7 +130,8 @@ onMounted(async () => {
     :publication_id="publication.id"
     :author_id="publication.User.id"
     :publication_title="publication.title"
-    @close="isDeleteModalOpen = false"
+    @close="handleClose"
+    @deleted="handleClose"
   />
 </template>
 
