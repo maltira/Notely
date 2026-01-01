@@ -6,6 +6,7 @@ import { useUserStore } from '@/stores/user.store.ts'
 import { computed, ref } from 'vue'
 import { usePublicationStore } from '@/stores/publication.store.ts'
 import { usePubViewStore } from '@/stores/view.store.ts'
+import FiltersModal from '@/components/Modals/FiltersModal.vue'
 
 const router = useRouter()
 const route = useRoute()
@@ -51,6 +52,11 @@ const routes: routeInterface[] = [
   { group: 'Личное', path: '/saved', name: 'Сохраненное', icon: 'saved.svg' },
   { group: 'Личное', path: '/subscriptions', name: 'Мои подписки', icon: 'user-check.svg' },
 ]
+
+const isFiltersOpen = ref(false)
+const toggleFilters = () => {
+  isFiltersOpen.value = !isFiltersOpen.value
+}
 
 const isSearchOpen = ref(false)
 const search = ref('')
@@ -161,7 +167,7 @@ const currentRoute = computed(() => {
             <img src="/icons/add.svg" alt="add" />
             Создать запись
           </button>
-          <button class="btn filter" v-if="!currentRoute!.hideFilters">
+          <button class="btn filter" v-if="!currentRoute!.hideFilters" @click="toggleFilters">
             <img src="/icons/filter.svg" alt="filter" />
             Фильтры
           </button>
@@ -184,6 +190,8 @@ const currentRoute = computed(() => {
       </div>
     </div>
   </div>
+
+  <FiltersModal v-if="isFiltersOpen" @close="isFiltersOpen = false"/>
 </template>
 
 <style scoped lang="scss">

@@ -125,7 +125,7 @@
   &.active {
     background: $black-primary !important;
     color: $white-primary !important;
-    border: none;
+    border: 1px solid transparent;
 
     & > img {
       opacity: 1;

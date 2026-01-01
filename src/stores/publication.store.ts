@@ -3,7 +3,12 @@ import type { PublicationEntity, PublicationRequest, PublicationUpdateRequest } 
 import type { ErrorResponse, MessageResponse } from '@/types/error.entity.ts'
 import { publicationService } from '@/api/publication.service.ts'
 import { isErrorResponse } from '@/utils/response_type.ts'
+import type { PublicationCategoriesRequest } from '@/types/category.entity.ts'
 
+export type filterType = {
+  date: null | 'month' | 'six months',
+  categories: PublicationCategoriesRequest[]
+}
 
 export const usePublicationStore = defineStore('publication', {
   state: () => ({
@@ -11,6 +16,10 @@ export const usePublicationStore = defineStore('publication', {
     isLoading: false,
     error: null as string | null,
     searchPublicationQuery: null as string | null,
+    filter: {
+      date: null as filterType['date'],
+      categories: [] as filterType['categories'],
+    },
   }),
 
   getters: {
@@ -60,7 +69,8 @@ export const usePublicationStore = defineStore('publication', {
         this.isLoading = true
         this.error = null
 
-        const response: PublicationEntity[] | ErrorResponse = await publicationService.fetchAll(is_draft)
+        const response: PublicationEntity[] | ErrorResponse =
+          await publicationService.fetchAll(is_draft)
 
         if (isErrorResponse(response)) {
           this.error = response.error
@@ -76,12 +86,16 @@ export const usePublicationStore = defineStore('publication', {
         this.isLoading = false
       }
     },
-    async fetchPublicationsByUserID(id: string, is_draft: boolean = false): Promise<PublicationEntity[] | null> {
+    async fetchPublicationsByUserID(
+      id: string,
+      is_draft: boolean = false,
+    ): Promise<PublicationEntity[] | null> {
       try {
         this.isLoading = true
         this.error = null
 
-        const response: PublicationEntity[] | ErrorResponse = await publicationService.fetchByUserID(id, is_draft)
+        const response: PublicationEntity[] | ErrorResponse =
+          await publicationService.fetchByUserID(id, is_draft)
         if (isErrorResponse(response)) {
           this.error = response.error
           return null

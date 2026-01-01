@@ -13,7 +13,7 @@ const publicationStore = usePublicationStore()
 
 const { viewMode } = storeToRefs(pubViewStore)
 
-const { searchPublicationQuery, allPublications, isLoading } = storeToRefs(publicationStore)
+const { searchPublicationQuery, allPublications, isLoading, filter } = storeToRefs(publicationStore)
 const { fetchAllPublications, setSearchQuery } = publicationStore
 
 const selectedPublication = ref<string>('')
@@ -25,8 +25,13 @@ const togglePublicationModal = (id: string) => {
 }
 
 onMounted(async () => {
+  // Обновляем фильтр
+  filter.value.date = null
+  filter.value.categories = []
+
   await fetchAllPublications()
 })
+
 </script>
 
 <template>

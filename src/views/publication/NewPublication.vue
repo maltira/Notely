@@ -321,7 +321,6 @@ onUnmounted(() => {
 
   <CategoryModal
     v-if="isCategoryModalOpen"
-    :is-open="isCategoryModalOpen"
     :categories="categories"
     @close="
       () => {
@@ -341,6 +340,7 @@ onUnmounted(() => {
   height: 100vh;
   padding: 80px 120px;
   overflow: hidden;
+  overflow-y: scroll;
 }
 .publication_content {
   display: flex;

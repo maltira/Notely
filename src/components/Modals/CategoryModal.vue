@@ -6,7 +6,6 @@ import type { PublicationCategoriesRequest } from '@/types/category.entity.ts'
 const { infoNotification } = useNotification()
 
 interface Props {
-  isOpen: boolean
   categories: Array<PublicationCategoriesRequest>
 }
 const props = defineProps<Props>()
@@ -34,7 +33,7 @@ const examples = ref<string[]>(['Психология', 'IT', 'Новости', 
 const inputRef = ref<HTMLInputElement | null>(null)
 
 const handleKeydown = (event: KeyboardEvent) => {
-  if (event.key === 'Escape' && props.isOpen) {
+  if (event.key === 'Escape') {
     handleClose()
   }
 }
@@ -42,11 +41,11 @@ const handleKeydown = (event: KeyboardEvent) => {
 const addCategory = (el?: string) => {
   if (el) {
     if (props.categories.filter((e) => e.Category.name === el).length > 0)
-      infoNotification('Вы уже выбрали данную категория уже выбрана')
+      infoNotification('Вы уже выбрали данную категорию')
     else emit('selectCategory', el)
   } else {
     if (props.categories.filter((e) => e.Category.name === category.value).length > 0)
-      infoNotification('Вы уже выбрали данную категория уже выбрана')
+      infoNotification('Вы уже выбрали данную категорию')
     else if (category.value) emit('selectCategory', category.value)
   }
   handleClose()

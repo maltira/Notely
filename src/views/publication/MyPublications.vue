@@ -16,7 +16,7 @@ const publicationStore = usePublicationStore()
 
 const { viewMode } = storeToRefs(pubViewStore)
 
-const { isLoading } = storeToRefs(publicationStore)
+const { isLoading, filter } = storeToRefs(publicationStore)
 const { fetchPublicationsByUserID } = publicationStore
 
 const allPublications = ref<PublicationEntity[] | null>(null)
@@ -32,6 +32,10 @@ const getPublications = async () => {
   allPublications.value = await fetchPublicationsByUserID(userStore.user!.id)
 }
 onMounted(async () => {
+  // Обновляем фильтр
+  filter.value.date = null
+  filter.value.categories = []
+
   await getPublications()
 })
 </script>

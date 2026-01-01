@@ -16,7 +16,7 @@ const publicationStore = usePublicationStore()
 
 const { viewMode } = storeToRefs(pubViewStore)
 
-const { isLoading } = storeToRefs(publicationStore)
+const { isLoading, filter } = storeToRefs(publicationStore)
 const { fetchPublicationsByUserID } = publicationStore
 
 const allPublications = ref<PublicationEntity[] | null>(null)
