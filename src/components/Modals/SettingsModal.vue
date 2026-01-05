@@ -291,6 +291,8 @@ onUnmounted(() => {
       width: fit-content;
 
       & > .avatar-preview {
+        @include h5-text;
+
         display: flex;
         align-items: center;
         justify-content: center;

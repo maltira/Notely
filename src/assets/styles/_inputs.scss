@@ -51,6 +51,9 @@
 
   &.active {
     color: rgba($black-primary, 0.99);
+    & > img {
+      opacity: 0.6;
+    }
   }
 
   &.error {

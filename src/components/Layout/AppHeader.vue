@@ -229,6 +229,8 @@ const currentRoute = computed(() => {
     width: fit-content;
 
     & > .avatar-preview {
+      @include button-text;
+
       display: flex;
       align-items: center;
       justify-content: center;

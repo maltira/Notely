@@ -148,6 +148,7 @@ onMounted(() => {
     }
     & > .auth {
       @include button-icon;
+      height: 36px;
     }
   }
 }
