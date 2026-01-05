@@ -12,13 +12,12 @@ const { infoNotification } = useNotification()
 
 // ? subscriptionStore
 const subscriptionStore = useSubscriptionStore()
-const { error } = storeToRefs(subscriptionStore)
+const { error, isLoading } = storeToRefs(subscriptionStore)
 const { updateSubscription, fetchAllUserSubscriptions, fetchAllUserSubscribers } = subscriptionStore
 
 // ? userStore
 const userStore = useUserStore()
-const { user, users, isLoading } = storeToRefs(userStore)
-const { fetchAllUsers } = userStore
+const { user } = storeToRefs(userStore)
 
 const search = ref<string>('')
 const isSearchOpen = ref(false)
@@ -27,7 +26,7 @@ const subscribers = ref<SubscriptionEntity[]>([])
 const subscriptions = ref<SubscriptionEntity[]>([])
 
 const toggleSearch = () => {
-  const searchInput = document.getElementById('search-users')
+  const searchInput = document.getElementById('search-subs')
   isSearchOpen.value = !isSearchOpen.value
 
   if (searchInput && isSearchOpen.value) {
@@ -36,20 +35,20 @@ const toggleSearch = () => {
 }
 
 const handleSearch = async () => {
-  const searchInput = document.getElementById('search-users')
+  const searchInput = document.getElementById('search-subs')
   isSearchOpen.value = false
   if (searchInput) {
     searchInput!.blur()
   }
 }
 
-const allUsers = computed(() => {
+const allSubscriptions = computed(() => {
   if (search.value) {
-    return users.value
-      .sort((a, b) => a.name.localeCompare(b.name))
-      .filter((user) => user.name.toLowerCase().includes(search.value.toLowerCase()))
+    return subscriptions.value
+      .sort((a, b) => a.TargetUser!.name.localeCompare(b.TargetUser!.name))
+      .filter((user) => user.TargetUser!.name.toLowerCase().includes(search.value.toLowerCase()))
   } else {
-    return users.value.sort((a, b) => a.name.localeCompare(b.name))
+    return subscriptions.value.sort((a, b) => a.TargetUser!.name.localeCompare(b.TargetUser!.name))
   }
 })
 
@@ -80,7 +79,6 @@ const getDataSubs = async () => {
 }
 
 onMounted(async () => {
-  await fetchAllUsers()
   await getDataSubs()
 })
 </script>
@@ -88,8 +86,8 @@ onMounted(async () => {
 <template>
   <div class="authors_page">
     <div class="title_block">
-      <h2>Авторы публикаций</h2>
-      <p>Здесь представлены все пользователи сервиса Notely</p>
+      <h2>Мои подписки</h2>
+      <p>Здесь отображены все пользователи, на которых вы подписаны</p>
     </div>
     <form
       autocomplete="off"
@@ -99,34 +97,38 @@ onMounted(async () => {
       @click="toggleSearch"
     >
       <img src="/icons/search.svg" alt="add" />
-      <input id="search-users" placeholder="Поиск по пользователям" type="text" @blur="isSearchOpen = false" v-model="search" />
+      <input id="search-subs" placeholder="Поиск по пользователям" type="text" @blur="isSearchOpen = false" v-model="search" />
     </form>
-    <div class="userlist_block skeleton" v-if="isLoading">
+    <div class="userlist_block skeleton" v-if="isLoading && !subscribers.length">
       <Skeleton height="60px" border-radius="12px" />
       <Skeleton height="60px" border-radius="12px" />
       <Skeleton height="60px" border-radius="12px" />
       <Skeleton height="60px" border-radius="12px" />
     </div>
-    <div class="userlist_block" v-if="allUsers.length > 0">
-      <div v-for="u in allUsers" class="user-item">
+    <div class="userlist_block" v-if="allSubscriptions.length > 0">
+      <div v-for="u in allSubscriptions" class="user-item">
         <div class="user-info">
-          <img class="avatar-preview" v-if="u.avatar" :src="`/img/avatars/${u.avatar}`" alt="avatar" />
+          <img
+            class="avatar-preview"
+            v-if="u.TargetUser && u.TargetUser.avatar"
+            :src="`/img/avatars/${u.TargetUser.avatar}`"
+            alt="avatar"
+          />
           <div class="avatar-preview none" v-else>
-            {{ u.name[0] }}
+            {{ u.TargetUser!.name[0] }}
           </div>
-          <p class="username">{{ u.name }}</p>
+          <p class="username">{{ u.TargetUser!.name }}</p>
         </div>
         <div class="user-subscribe">
-          <p v-if="isMySubscriber(u.id)">Подписан(а) на вас</p>
+          <p v-if="isMySubscriber(u.TargetUser!.id)">Подписан(а) на вас</p>
           <button
             v-if="user && u.id !== user.id"
             class="subscribe"
-            @click="updateSub(u.id)"
-            :class="{ dark: !isMySubscription(u.id) }"
+            @click="updateSub(u.TargetUser!.id)"
+            :class="{ dark: !isMySubscription(u.TargetUser!.id) }"
           >
-            {{ isMySubscription(u.id) ? 'Вы подписаны' : 'Подписаться' }}
+            {{ isMySubscription(u.TargetUser!.id) ? 'Вы подписаны' : 'Подписаться' }}
           </button>
-          <span v-else-if="user && u.id === user.id">Это ваш аккаунт</span>
         </div>
       </div>
     </div>

@@ -20,6 +20,7 @@ import CategoriesView from '@/views/publication/CategoriesView.vue'
 import FavoritesView from '@/views/publication/FavoritesView.vue'
 import AboutView from '@/views/AboutView.vue'
 import AuthorsView from '@/views/AuthorsView.vue'
+import SubscriptionsView from '@/views/SubscriptionsView.vue'
 
 const checkAuth = async (to: RouteLocationNormalizedGeneric, from: RouteLocationNormalizedLoadedGeneric, next: NavigationGuardNext) => {
   const userStore = useUserStore()
@@ -92,6 +93,12 @@ const routes: RouteRecordRaw[] = [
     path: '/authors',
     name: 'AuthorsView',
     component: AuthorsView,
+  },
+  {
+    path: '/subscriptions',
+    name: 'SubsctiptionsView',
+    component: SubscriptionsView,
+    beforeEnter: checkAuth,
   },
 
   {

@@ -46,11 +46,11 @@ const routes: routeInterface[] = [
   },
   { group: 'Главная', path: '/', name: 'Все публикации', icon: 'home.svg' },
   { group: 'Главная', path: '/categories', name: 'Категории', icon: 'category.svg', hideFilters: true, hideViews: true },
-  { group: 'Главная', path: '/authors', name: 'Авторы', icon: 'user.svg' },
+  { group: 'Главная', path: '/authors', name: 'Авторы', icon: 'user.svg', hideFilters: true, hideViews: true },
   { group: 'Личное', path: '/publications/me', name: 'Мои публикации', icon: 'box.svg' },
   { group: 'Личное', path: '/drafts', name: 'Черновики', icon: 'page.svg' },
   { group: 'Личное', path: '/favorites', name: 'Сохраненное', icon: 'saved-outline.svg' },
-  { group: 'Личное', path: '/subscriptions', name: 'Мои подписки', icon: 'user-check.svg' },
+  { group: 'Личное', path: '/subscriptions', name: 'Мои подписки', icon: 'user-check.svg', hideFilters: true, hideViews: true },
 ]
 
 const isFiltersOpen = ref(false)
@@ -104,12 +104,7 @@ const currentRoute = computed(() => {
   <div class="header">
     <div class="left-side-nav">
       <div class="avatar-block_preview">
-        <img
-          v-if="user && user.avatar"
-          class="avatar-preview"
-          :src="`/img/avatars/${user.avatar}`"
-          alt="avatar"
-        />
+        <img v-if="user && user.avatar" class="avatar-preview" :src="`/img/avatars/${user.avatar}`" alt="avatar" />
         <div class="avatar-preview none" v-else>
           {{ user ? user.name[0] : 'Ч' }}
         </div>
@@ -129,11 +124,7 @@ const currentRoute = computed(() => {
         <div class="route">
           <p class="block">{{ currentRoute ? currentRoute.group : 'Не понятненько' }}</p>
           <p class="divider">/</p>
-          <img
-            class="icon-route"
-            :src="`/icons/${currentRoute ? currentRoute.icon : 'file-outline.svg'}`"
-            alt="icon"
-          />
+          <img class="icon-route" :src="`/icons/${currentRoute ? currentRoute.icon : 'file-outline.svg'}`" alt="icon" />
           <p class="name-route">{{ currentRoute ? currentRoute.name : '404' }}</p>
         </div>
         <p class="logotype" @click="goToHome">Notely</p>
@@ -159,11 +150,7 @@ const currentRoute = computed(() => {
           />
         </form>
         <div class="buttons">
-          <button
-            v-if="isAuthenticated && !currentRoute!.hideCreate"
-            class="btn add"
-            @click="router.push('/publication/create')"
-          >
+          <button v-if="isAuthenticated && !currentRoute!.hideCreate" class="btn add" @click="router.push('/publication/create')">
             <img src="/icons/add.svg" alt="add" />
             Создать запись
           </button>
@@ -191,7 +178,7 @@ const currentRoute = computed(() => {
     </div>
   </div>
 
-  <FiltersModal v-if="isFiltersOpen" @close="isFiltersOpen = false"/>
+  <FiltersModal v-if="isFiltersOpen" @close="isFiltersOpen = false" />
 </template>
 
 <style scoped lang="scss">
