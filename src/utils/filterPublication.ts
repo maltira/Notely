@@ -4,7 +4,6 @@ import type { filterType } from '@/stores/publication.store.ts'
 
 export const filterPublications = (arr: PublicationEntity[], filter: filterType): PublicationEntity[] => {
   if (arr.length > 0) {
-
     if (filter.date) {
       switch (filter.date) {
         case 'month':

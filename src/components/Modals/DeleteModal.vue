@@ -5,14 +5,18 @@ import { storeToRefs } from 'pinia'
 import Spinner from '@/components/UI/Spinner.vue'
 import { usePublicationStore } from '@/stores/publication.store.ts'
 import { useNotification } from '@/composables/useNotification.ts'
+import { useCategoriesStore } from '@/stores/categories.store.ts'
+import { useFavoritesStore } from '@/stores/favorite.store.ts'
 
 const { infoNotification } = useNotification()
 
+const categoriesStore = useCategoriesStore()
 const publicationStore = usePublicationStore()
-const userStore = useUserStore()
-const { user } = storeToRefs(userStore)
 const { deletePublication } = publicationStore
 const { error, isLoading } = storeToRefs(publicationStore)
+const userStore = useUserStore()
+const { user } = storeToRefs(userStore)
+const favoriteStore = useFavoritesStore()
 
 interface Props {
   publication_id: string
@@ -24,9 +28,8 @@ const props = defineProps<Props>()
 // обращение к родителю
 const emit = defineEmits<{
   close: []
-  deleted: []
 }>()
-const handleClose = (deleted: boolean = false) => {
+const handleClose = () => {
   const delete_pub_container = document.getElementById('delete_pub_container')
   const delete_pub_content = document.getElementById('delete_pub_content')
 
@@ -36,8 +39,7 @@ const handleClose = (deleted: boolean = false) => {
   }
 
   setTimeout(() => {
-    if (deleted) emit('deleted')
-    else emit('close')
+    emit('close')
   }, 100)
 }
 
@@ -55,7 +57,13 @@ const onDeletePub = async () => {
       infoNotification('❌ ' + error.value)
     } else {
       infoNotification('😟 Публикация была успешно удалена')
-      handleClose(true)
+      handleClose()
+
+      publicationStore.publications = publicationStore.publications.filter((p) => p.id !== props.publication_id)
+      publicationStore.userPublications = publicationStore.userPublications.filter((p) => p.id !== props.publication_id)
+      publicationStore.userDrafts = publicationStore.userDrafts.filter((p) => p.id !== props.publication_id)
+      favoriteStore.favorites = favoriteStore.favorites.filter((p) => p.id !== props.publication_id)
+      categoriesStore.categories = await categoriesStore.getAllCategories()
     }
   } else {
     infoNotification('❌ Недостаточно прав для удаления публикации')

@@ -1,9 +1,5 @@
 <script setup lang="ts">
-import type {
-  PublicationEntity,
-  PublicationRequest,
-  PublicationUpdateRequest,
-} from '@/types/publication.entity.ts'
+import type { PublicationEntity, PublicationRequest, PublicationUpdateRequest } from '@/types/publication.entity.ts'
 import { useNotification } from '@/composables/useNotification.ts'
 import { usePublicationStore } from '@/stores/publication.store.ts'
 import { storeToRefs } from 'pinia'
@@ -14,15 +10,15 @@ import CategoryModal from '@/components/Modals/CategoryModal.vue'
 import PublicationItem from '@/components/UI/PublicationItem.vue'
 import { ChromePicker } from 'vue-color'
 import SelectCategoryStyleModal from '@/components/Modals/SelectCategoryStyleModal.vue'
-import type {
-  PublicationCategoriesRequest,
-  PublicationCategoriesUpdateRequest,
-} from '@/types/category.entity.ts'
+import type { PublicationCategoriesRequest, PublicationCategoriesUpdateRequest } from '@/types/category.entity.ts'
+import { useAppInit } from '@/composables/useAppInit.ts'
 
 interface Props {
   id?: string
 }
 const props = defineProps<Props>()
+
+const { initApp } = useAppInit()
 
 const userStore = useUserStore()
 const { infoNotification } = useNotification()
@@ -116,7 +112,7 @@ const CreatePublication = async (is_draft: boolean) => {
     categories: categories.value,
     is_draft: is_draft,
   }
-  console.log(req.is_draft)
+
   await createPublication(req)
 
   if (error.value) infoNotification('❌ ' + error.value)
@@ -124,6 +120,7 @@ const CreatePublication = async (is_draft: boolean) => {
     if (is_draft) infoNotification('📥 Публикация сохранена в черновики')
     else infoNotification(`✅ Создана новая публикация «${req.title}»`)
     router.back()
+    await initApp()
   }
 }
 
@@ -143,8 +140,9 @@ const SavePublication = async (is_draft: boolean) => {
     infoNotification('❌ ' + error.value)
   } else {
     if (is_draft) infoNotification('📥 Публикация сохранена в черновики')
-    else infoNotification('✅ Публикация успешно обновлена')
+    else infoNotification('✅ Публикация успешно опубликована')
     router.back()
+    await initApp()
   }
 }
 
@@ -200,9 +198,7 @@ onUnmounted(() => {
         <div class="title">
           <div class="info-block">
             <h1>{{ id ? 'Редактировать публикацию' : 'Новая публикация' }}</h1>
-            <p>
-              Нажмите на нужный элемент публикации справа, чтоб изменить его стилевое оформление
-            </p>
+            <p>Нажмите на нужный элемент публикации справа, чтоб изменить его стилевое оформление</p>
           </div>
         </div>
         <div class="inputs-block">
@@ -231,20 +227,11 @@ onUnmounted(() => {
           <div class="input-form">
             <p class="input-info">Укажите категории (не более 4) <span class="required">*</span></p>
             <div class="categories">
-              <button
-                class="add-category"
-                @click="toggleCategoryModal"
-                :class="{ disabled: categories.length >= 4 }"
-              >
+              <button class="add-category" @click="toggleCategoryModal" :class="{ disabled: categories.length >= 4 }">
                 <img src="/icons/add.svg" alt="add" />
                 Добавить
               </button>
-              <button
-                class="added-btn active"
-                v-for="(el, i) in selectedCategories"
-                :key="i"
-                @click="removeCategory(i)"
-              >
+              <button class="added-btn active" v-for="(el, i) in selectedCategories" :key="i" @click="removeCategory(i)">
                 <img src="/icons/close-white.svg" alt="close" />
                 {{ el.Category.name }}
               </button>
@@ -301,7 +288,7 @@ onUnmounted(() => {
           @click="id ? SavePublication(true) : CreatePublication(true)"
           class="light archive"
           :class="{
-            disabled: !title && !description && !selectedCategories.length
+            disabled: !title && !description && !selectedCategories.length,
           }"
         >
           <img src="/icons/archive.svg" alt="archive" />

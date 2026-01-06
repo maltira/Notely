@@ -7,74 +7,63 @@ import PublicationItem from '@/components/UI/PublicationItem.vue'
 import { usePubViewStore } from '@/stores/view.store.ts'
 import PublicationModal from '@/components/Modals/PublicationModal.vue'
 import Skeleton from '@/components/UI/Skeleton.vue'
-import type { PublicationEntity } from '@/types/publication.entity.ts'
 import { useUserStore } from '@/stores/user.store.ts'
 import { filterPublications } from '@/utils/filterPublication.ts'
+import type { PublicationEntity } from '@/types/publication.entity.ts'
 
 const userStore = useUserStore()
-const pubViewStore = usePubViewStore()
-const publicationStore = usePublicationStore()
+const { user } = storeToRefs(userStore)
 
+const pubViewStore = usePubViewStore()
 const { viewMode } = storeToRefs(pubViewStore)
 
-const { isLoading, filter } = storeToRefs(publicationStore)
-const { fetchPublicationsByUserID } = publicationStore
+const publicationStore = usePublicationStore()
+const { userDrafts, isLoading: pubLoading, filter } = storeToRefs(publicationStore)
 
-const allPublications = ref<PublicationEntity[] | null>(null)
-const selectedPublication = ref<string>('')
+const isLoading = computed(() => pubLoading.value || userDrafts.value === undefined)
+
+const selectedPublication = ref<PublicationEntity | null>(null)
 const isPublicationOpen = ref<boolean>(false)
 
 const togglePublicationModal = (id: string) => {
   isPublicationOpen.value = !isPublicationOpen.value
-  selectedPublication.value = id
+
+  selectedPublication.value = userDrafts.value.find((p) => p.id === id) || null
 }
 
 const listPublications = computed(() => {
-  return filterPublications(allPublications.value || [], filter.value)
+  if (filter.value.date !== null || filter.value.categories.length > 0) return filterPublications(userDrafts.value, filter.value)
+  return userDrafts.value
 })
 
-const getPublications = async () => {
-  allPublications.value = await fetchPublicationsByUserID(userStore.user!.id, true)
-}
-
-onMounted(async () => {
+onMounted(() => {
   filter.value.date = null
   filter.value.categories = []
-
-  await getPublications()
 })
 </script>
 
 <template>
   <div class="publications_page">
-    <div class="page-header">
+    <div class="page-header skeleton" v-if="isLoading">
       <div class="search-result-header">
-        <h1>
-          Мои черновики
-          <span :style="{ opacity: 0.3 }"
-            >({{ listPublications.length }})</span
-          >
-        </h1>
+        <Skeleton width="254px" height="31px" />
+        <Skeleton width="380px" height="19px" />
       </div>
     </div>
-    <div class="list-publication skeleton" v-if="isLoading && !allPublications">
-      <Skeleton
-        :width="viewMode === 'single' ? '100%' : '341px'"
-        height="360px"
-        border-radius="20px"
-      />
-      <Skeleton
-        :width="viewMode === 'single' ? '100%' : '341px'"
-        height="360px"
-        border-radius="20px"
-      />
-      <Skeleton
-        :width="viewMode === 'single' ? '100%' : '341px'"
-        height="360px"
-        border-radius="20px"
-      />
+    <div class="page-header" v-else>
+      <div class="search-result-header">
+        <h2>
+          Мои черновики
+          <span :style="{ opacity: 0.3 }">({{ listPublications.length }})</span>
+        </h2>
+        <p>Ваши неопубликованные записи находятся здесь</p>
+      </div>
     </div>
-    <div class="list-publication" v-if="listPublications.length > 0">
+
+    <div class="list-publication skeleton" v-if="isLoading">
+      <Skeleton v-for="i in 12" :key="i" :width="viewMode === 'single' ? '100%' : '341px'" height="360px" border-radius="20px" />
+    </div>
+    <div class="list-publication" v-else-if="listPublications.length > 0">
       <PublicationItem
         v-for="p in listPublications"
         :id="p.id"
@@ -82,32 +71,21 @@ onMounted(async () => {
         :description="p.description"
         :categories="p.PublicationCategories"
         :created_at="formatDate(p.created_at, 'DD/MM/YYYY HH:mm')"
-        :author="userStore.user!"
+        :author="user!"
         :background_color="p.background_color"
         :isWide="viewMode === 'single'"
         @openModal="togglePublicationModal"
-        @deleted="getPublications"
       >
       </PublicationItem>
     </div>
 
-    <p
-      v-if="!isLoading && listPublications.length === 0"
-      class="search-result-none"
-    >
-      Ничего не найдено
-    </p>
+    <p v-else class="search-result-none">Ничего не найдено</p>
   </div>
 
   <PublicationModal
     v-if="selectedPublication && isPublicationOpen"
-    :pub_id="selectedPublication"
-    @close="
-      () => {
-        isPublicationOpen = false
-        getPublications()
-      }
-    "
+    :pub="selectedPublication"
+    @close="isPublicationOpen = false"
   />
 </template>
 
@@ -126,10 +104,10 @@ onMounted(async () => {
 
 .search-result-header {
   display: flex;
-  gap: 10px;
+  gap: 8px;
   flex-direction: column;
 
-  & > h1 {
+  & > h2 {
     @include h2-text;
     display: flex;
     align-items: center;
@@ -171,9 +149,7 @@ onMounted(async () => {
   background: $white-primary;
   border: 1px solid rgba(gray, 0.2);
   background: rgba(gray, 0.05);
-  width: calc(
-    100% / 4 - 15px + 15px / 4
-  ); // ширина конейнера - отступ + поправка по правому отступу
+  width: calc(100% / 4 - 15px + 15px / 4); // ширина конейнера - отступ + поправка по правому отступу
   border-radius: 12px;
   cursor: pointer;
 

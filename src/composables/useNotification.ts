@@ -6,8 +6,9 @@ export interface NotificationOptions {
 }
 
 interface NotificationItem extends NotificationOptions {
-  id: number,
-  exiting: boolean
+  id: number
+  visible: boolean
+  show: boolean
 }
 
 const notifications = ref<NotificationItem[]>([])
@@ -18,30 +19,49 @@ export function useNotification() {
     const id = idCounter++
     const notification = {
       id,
-      duration: 6000,
-      exiting: false,
+      duration: 4500,
+      visible: false, // начинаем невидимым
+      show: true, // флаг для начала анимации
       ...options,
     }
+
     notifications.value.push(notification)
+
+    // Запускаем анимацию появления через следующий кадр
+    setTimeout(() => {
+      const notificationIndex = notifications.value.findIndex((n) => n.id === id)
+      if (notificationIndex > -1) {
+        notifications.value[notificationIndex]!.visible = true
+      }
+    }, 10)
+
     if (notification.duration > 0) {
       setTimeout(() => {
-        removeNotification(id)
+        hideNotification(id)
       }, notification.duration)
     }
   }
 
-  const removeNotification = (id: number) => {
-    const notification = notifications.value.find(element => element.id === id)
+  const hideNotification = (id: number) => {
+    const notification = notifications.value.find((element) => element.id === id)
     if (notification) {
-      notification.exiting = true
+      notification.visible = false
 
+      // Удаляем после завершения анимации
       setTimeout(() => {
-        const index = notifications.value.findIndex(element => element.id === id)
-        if (index > -1) {
-          notifications.value.splice(index, 1)
-        }
+        notification.show = false
+        setTimeout(() => {
+          const index = notifications.value.findIndex((element) => element.id === id)
+          if (index > -1) {
+            notifications.value.splice(index, 1)
+          }
+        }, 300)
       }, 300)
     }
+  }
+
+  const removeNotification = (id: number) => {
+    hideNotification(id)
   }
 
   const infoNotification = (description: string) => {
@@ -51,7 +71,8 @@ export function useNotification() {
   return {
     notifications,
     showNotification,
+    hideNotification,
     removeNotification,
-    infoNotification
+    infoNotification,
   }
 }

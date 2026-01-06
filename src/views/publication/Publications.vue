@@ -8,33 +8,33 @@ import { usePubViewStore } from '@/stores/view.store.ts'
 import PublicationModal from '@/components/Modals/PublicationModal.vue'
 import Skeleton from '@/components/UI/Skeleton.vue'
 import { filterPublications } from '@/utils/filterPublication.ts'
+import type { PublicationEntity } from '@/types/publication.entity.ts'
 
 const pubViewStore = usePubViewStore()
-const publicationStore = usePublicationStore()
-
 const { viewMode } = storeToRefs(pubViewStore)
 
+const publicationStore = usePublicationStore()
 const { searchPublicationQuery, allPublications, isLoading, filter } = storeToRefs(publicationStore)
-const { fetchAllPublications, setSearchQuery } = publicationStore
+const { setSearchQuery } = publicationStore
 
-const selectedPublication = ref<string>('')
+const selectedPublication = ref<PublicationEntity | null>(null)
 const isPublicationOpen = ref<boolean>(false)
 
 const togglePublicationModal = (id: string) => {
   isPublicationOpen.value = !isPublicationOpen.value
-  selectedPublication.value = id
+
+  selectedPublication.value = allPublications.value.find((p) => p.id === id) || null
 }
 
 const listPublications = computed(() => {
-  return filterPublications(allPublications.value, filter.value)
+  if (filter.value.date !== null || filter.value.categories.length > 0)
+    return filterPublications(allPublications.value, filter.value)
+  return allPublications.value
 })
 
-onMounted(async () => {
-  // Обновляем фильтр
+onMounted(() => {
   filter.value.date = null
   filter.value.categories = []
-
-  await fetchAllPublications()
 })
 </script>
 
@@ -42,7 +42,7 @@ onMounted(async () => {
   <div class="publications_page">
     <div class="page-header">
       <div class="search-result-header">
-        <h1>
+        <h2>
           <img
             v-if="searchPublicationQuery"
             src="/icons/arr-black.svg"
@@ -50,33 +50,17 @@ onMounted(async () => {
             style="transform: rotate(180deg)"
             @click="searchPublicationQuery ? setSearchQuery('') : null"
           />
-          {{
-            searchPublicationQuery
-              ? `Результаты по запросу «${searchPublicationQuery}»`
-              : 'Все публикации'
-          }}
-        </h1>
+          {{ searchPublicationQuery ? `Результаты по запросу «${searchPublicationQuery}»` : 'Все публикации' }}
+        </h2>
         <p v-if="searchPublicationQuery">Найдено публикаций: {{ allPublications.length }}</p>
+        <p v-else>Воспользуйтесь поиском, чтобы отыскать что-то конкретное</p>
       </div>
     </div>
-    <div class="list-publication skeleton" v-if="isLoading && !allPublications">
-      <Skeleton
-        :width="viewMode === 'single' ? '100%' : '341px'"
-        height="360px"
-        border-radius="20px"
-      />
-      <Skeleton
-        :width="viewMode === 'single' ? '100%' : '341px'"
-        height="360px"
-        border-radius="20px"
-      />
-      <Skeleton
-        :width="viewMode === 'single' ? '100%' : '341px'"
-        height="360px"
-        border-radius="20px"
-      />
+
+    <div class="list-publication skeleton" v-if="isLoading">
+      <Skeleton v-for="i in 12" :key="i" :width="viewMode === 'single' ? '100%' : '341px'" height="360px" border-radius="20px" />
     </div>
-    <div class="list-publication" v-if="listPublications.length > 0">
+    <div class="list-publication" v-else-if="listPublications.length > 0">
       <PublicationItem
         v-for="p in listPublications"
         :id="p.id"
@@ -88,25 +72,16 @@ onMounted(async () => {
         :background_color="p.background_color"
         :isWide="viewMode === 'single'"
         @openModal="togglePublicationModal"
-        @deleted="fetchAllPublications"
-      >
-      </PublicationItem>
+      />
     </div>
 
-    <p v-if="!isLoading && listPublications.length === 0" class="search-result-none">
-      Ничего не найдено
-    </p>
+    <p v-else class="search-result-none">Ничего не найдено</p>
   </div>
 
   <PublicationModal
     v-if="selectedPublication && isPublicationOpen"
-    :pub_id="selectedPublication"
-    @close="
-      () => {
-        isPublicationOpen = false
-        fetchAllPublications()
-      }
-    "
+    :pub="selectedPublication"
+    @close="isPublicationOpen = false"
   />
 </template>
 
@@ -125,10 +100,10 @@ onMounted(async () => {
 
 .search-result-header {
   display: flex;
-  gap: 10px;
+  gap: 8px;
   flex-direction: column;
 
-  & > h1 {
+  & > h2 {
     @include h2-text;
     display: flex;
     align-items: center;
@@ -170,9 +145,7 @@ onMounted(async () => {
   background: $white-primary;
   border: 1px solid rgba(gray, 0.2);
   background: rgba(gray, 0.05);
-  width: calc(
-    100% / 4 - 15px + 15px / 4
-  ); // ширина конейнера - отступ + поправка по правому отступу
+  width: calc(100% / 4 - 15px + 15px / 4); // ширина конейнера - отступ + поправка по правому отступу
   border-radius: 12px;
   cursor: pointer;
 

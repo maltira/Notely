@@ -1,16 +1,16 @@
 <script setup lang="ts">
 import Skeleton from '@/components/UI/Skeleton.vue'
 import { usePublicationStore } from '@/stores/publication.store.ts'
-import { computed, onMounted, ref } from 'vue'
-import type { CategorizedGroups, Category, PublicationCategoriesRequest } from '@/types/category.entity.ts'
+import { computed, ref } from 'vue'
+import type { Category, PublicationCategoriesRequest } from '@/types/category.entity.ts'
 import router from '@/router'
 import { storeToRefs } from 'pinia'
+import { useCategoriesStore } from '@/stores/categories.store.ts'
 
 const publicationStore = usePublicationStore()
-const { getAllCategories } = publicationStore
-const { filter, isLoading } = storeToRefs(publicationStore)
-
-const categories = ref<CategorizedGroups | null>(null)
+const { filter } = storeToRefs(publicationStore)
+const categoriesStore = useCategoriesStore()
+const { categories, isLoading } = storeToRefs(categoriesStore)
 
 const search = ref<string>('')
 const isSearchOpen = ref(false)
@@ -89,10 +89,6 @@ const hasGroups = computed(() => {
 const hasOther = computed(() => {
   return allCategories.value && allCategories.value.other && allCategories.value.other.length > 0
 })
-
-onMounted(async () => {
-  categories.value = await getAllCategories()
-})
 </script>
 
 <template>
@@ -112,36 +108,11 @@ onMounted(async () => {
       <input id="search-categories" placeholder="Поиск по категориям" type="text" @blur="isSearchOpen = false" v-model="search" />
     </form>
 
-    <div class="categories_list skeleton" v-if="isLoading && !categories">
-      <div class="category-block">
-        <Skeleton width="100px" height="36px" border-radius="6px" />
+    <div class="categories_list skeleton" v-if="isLoading">
+      <div class="category-block" v-for="i in 12" :key="i">
+        <Skeleton width="25px" height="32px" border-radius="6px" />
         <div class="categories-block_items">
-          <Skeleton width="150px" height="36px" border-radius="6px" />
-          <Skeleton width="100px" height="36px" border-radius="6px" />
-          <Skeleton width="120px" height="36px" border-radius="6px" />
-          <Skeleton width="150px" height="36px" border-radius="6px" />
-          <Skeleton width="100px" height="36px" border-radius="6px" />
-          <Skeleton width="120px" height="36px" border-radius="6px" />
-        </div>
-      </div>
-      <div class="category-block">
-        <Skeleton width="100px" height="36px" border-radius="6px" />
-        <div class="categories-block_items">
-          <Skeleton width="150px" height="36px" border-radius="6px" />
-          <Skeleton width="100px" height="36px" border-radius="6px" />
-          <Skeleton width="120px" height="36px" border-radius="6px" />
-          <Skeleton width="100px" height="36px" border-radius="6px" />
-          <Skeleton width="120px" height="36px" border-radius="6px" />
-        </div>
-      </div>
-      <div class="category-block">
-        <Skeleton width="100px" height="36px" border-radius="6px" />
-        <div class="categories-block_items">
-          <Skeleton width="150px" height="36px" border-radius="6px" />
-          <Skeleton width="100px" height="36px" border-radius="6px" />
-          <Skeleton width="120px" height="36px" border-radius="6px" />
-          <Skeleton width="150px" height="36px" border-radius="6px" />
-          <Skeleton width="100px" height="36px" border-radius="6px" />
+          <Skeleton width="150px" height="34px" border-radius="6px" v-for="j in Math.round(5 * Math.random())" :key="j" />
         </div>
       </div>
     </div>

@@ -1,22 +1,22 @@
 <script setup lang="ts">
 import { useRoute } from 'vue-router'
 import SettingsModal from '@/components/Modals/SettingsModal.vue'
-import { onMounted, ref } from 'vue'
+import { ref } from 'vue'
 import { useUserStore } from '@/stores/user.store.ts'
 import { storeToRefs } from 'pinia'
 import type { UpdatedGreeting } from '@/types/user.entity.ts'
 import { useNotification } from '@/composables/useNotification.ts'
 import router from '@/router'
+import Skeleton from '@/components/UI/Skeleton.vue'
 
 const route = useRoute()
 
 const { infoNotification } = useNotification()
 const userStore = useUserStore()
-const { user, error } = storeToRefs(userStore)
+const { user, error, isLoading } = storeToRefs(userStore)
 const { updateUserGreeting } = userStore
 
 const isSettingsOpen = ref(false)
-const isGreetingClosed = ref(false)
 
 const toggleSettings = () => {
   isSettingsOpen.value = !isSettingsOpen.value
@@ -36,47 +36,62 @@ const routes = [
   ],
 ]
 
-const updateGreeting = async () => {
+const closeGreeting = async () => {
   const req: UpdatedGreeting = {
     id: user.value!.id,
     is_greeting_closed: true,
   }
-  isGreetingClosed.value = true
   await updateUserGreeting(req)
 
   if (error.value) {
     infoNotification('❌' + error.value)
   } else {
+    user.value!.is_greeting_closed = true
     if (route.path === '/greeting') {
       await router.push('/')
     }
   }
 }
-
-onMounted(() => {
-  if (user.value) {
-    isGreetingClosed.value = user.value.is_greeting_closed
-  }
-})
 </script>
 
 <template>
   <div class="sidebar">
-    <div class="route-block">
+    <div class="route-block skeleton" v-if="isLoading">
+      <div class="block">
+        <Skeleton width="90px" height="18px" />
+        <div class="routes">
+          <Skeleton width="100%" height="36px" />
+          <Skeleton width="100%" height="36px" />
+          <Skeleton width="100%" height="36px" />
+          <Skeleton width="100%" height="36px" />
+        </div>
+      </div>
+      <div class="block">
+        <Skeleton width="90px" height="18px" />
+        <div class="routes">
+          <Skeleton width="100%" height="36px" />
+          <Skeleton width="100%" height="36px" />
+          <Skeleton width="100%" height="36px" />
+          <Skeleton width="100%" height="36px" />
+        </div>
+      </div>
+    </div>
+    <div class="route-block" v-else>
       <div class="block main">
         <p>ГЛАВНАЯ</p>
         <div class="routes">
           <RouterLink
+            id="greeting"
             to="/greeting"
             class="tab-container close"
             :class="{ active: route.path === '/greeting' }"
-            v-if="user && !isGreetingClosed"
+            v-if="user && !user.is_greeting_closed"
           >
             <div class="route">
               <img src="/icons/mood.svg" alt="img" />
               Добро пожаловать
             </div>
-            <img @click.stop.prevent @click="updateGreeting" class="close-container" src="/icons/close.svg" alt="close" />
+            <img @click.stop.prevent @click="closeGreeting" class="close-container" src="/icons/close.svg" alt="close" />
           </RouterLink>
           <RouterLink
             v-for="(el, i) in routes[0]"
@@ -106,14 +121,21 @@ onMounted(() => {
         </div>
       </div>
     </div>
-    <div class="block settings">
-      <p>ЛИЧНОЕ</p>
+
+    <div class="route-block skeleton" v-if="isLoading">
       <div class="routes">
-        <button class="tab-container">
+        <Skeleton width="100%" height="32px" />
+        <Skeleton width="100%" height="32px" />
+        <Skeleton width="100%" height="32px" />
+      </div>
+    </div>
+    <div class="block settings" v-else>
+      <div class="routes">
+        <button class="tab-container" v-if="user">
           <img src="/icons/notif.svg" alt="img" />
           Уведомления
         </button>
-        <button class="tab-container" @click="toggleSettings">
+        <button class="tab-container" v-if="user" @click="toggleSettings">
           <img src="/icons/settings.svg" alt="img" />
           Настройки
         </button>

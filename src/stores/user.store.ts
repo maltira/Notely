@@ -16,7 +16,8 @@ export const useUserStore = defineStore('user', {
     user: null as UserEntity | null,
     users: [] as UserEntity[],
     groups: [] as GroupEntity[],
-    isLoading: false,
+
+    isLoading: true,
     error: null as string | null,
     searchQuery: null as string | null,
     filterQuery: null as string | null,
@@ -76,6 +77,7 @@ export const useUserStore = defineStore('user', {
         }
         // Пришёл ответ User (200)
         this.setUser(response)
+
         return response
       } catch {
         this.error = 'Ошибка получения данных пользователя, повторите попытку авторизации'
@@ -129,7 +131,7 @@ export const useUserStore = defineStore('user', {
       }
     },
 
-    async fetchAllUsers(): Promise<UserEntity[] | null> {
+    async fetchAllUsers(): Promise<UserEntity[]> {
       try {
         this.isLoading = true
         this.error = null
@@ -137,7 +139,7 @@ export const useUserStore = defineStore('user', {
         const response: UserEntity[] | ErrorResponse = await userService.fetchAllUsers()
         if (isErrorResponse(response)) {
           this.error = response.error
-          return null
+          return []
         }
         if (response.length > 0) {
           this.users = [...response].sort((a, b) => a.Group.name.localeCompare(b.Group.name))
@@ -146,7 +148,7 @@ export const useUserStore = defineStore('user', {
         return response
       } catch {
         this.error = 'Ошибка получения пользователей, повторите попытку'
-        return null
+        return []
       } finally {
         this.isLoading = false
       }

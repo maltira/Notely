@@ -7,6 +7,7 @@ import { computed, ref } from 'vue'
 import { usePublicationStore } from '@/stores/publication.store.ts'
 import { usePubViewStore } from '@/stores/view.store.ts'
 import FiltersModal from '@/components/Modals/FiltersModal.vue'
+import Skeleton from '@/components/UI/Skeleton.vue'
 
 const router = useRouter()
 const route = useRoute()
@@ -20,8 +21,7 @@ const { viewMode } = storeToRefs(pubViewStore)
 const { toggleView } = pubViewStore
 const { setSearchQuery } = publicationStore
 const { logout } = authStore
-const { isAuthenticated } = storeToRefs(authStore)
-const { user } = storeToRefs(userStore)
+const { user, isLoading } = storeToRefs(userStore)
 
 interface routeInterface {
   group: string
@@ -102,7 +102,19 @@ const currentRoute = computed(() => {
 
 <template>
   <div class="header">
-    <div class="left-side-nav">
+    <div class="left-side-nav skeleton" v-if="isLoading && !user">
+      <Skeleton width="50px" height="50px" border-radius="100%" />
+      <div class="user-info">
+        <div class="user-title">
+          <Skeleton width="160px" height="19px" />
+          <Skeleton width="100px" height="19px" />
+        </div>
+        <div class="exit-btn" @click="goToLogout">
+          <img src="/icons/exit.svg" alt="ex" />
+        </div>
+      </div>
+    </div>
+    <div class="left-side-nav" v-else>
       <div class="avatar-block_preview">
         <img v-if="user && user.avatar" class="avatar-preview" :src="`/img/avatars/${user.avatar}`" alt="avatar" />
         <div class="avatar-preview none" v-else>
@@ -119,7 +131,18 @@ const currentRoute = computed(() => {
         </div>
       </div>
     </div>
-    <div class="right-side-nav">
+
+    <div class="right-side-nav skeleton" v-if="isLoading && !user">
+      <div class="top-side">
+        <Skeleton width="280px" height="20px" />
+        <Skeleton width="40px" height="20px" />
+      </div>
+      <div class="actions">
+        <Skeleton width="300px" height="44px" />
+        <Skeleton width="180px" height="40px" />
+      </div>
+    </div>
+    <div class="right-side-nav" v-else>
       <div class="top-side">
         <div class="route">
           <p class="block">{{ currentRoute ? currentRoute.group : 'Не понятненько' }}</p>
@@ -150,7 +173,7 @@ const currentRoute = computed(() => {
           />
         </form>
         <div class="buttons">
-          <button v-if="isAuthenticated && !currentRoute!.hideCreate" class="btn add" @click="router.push('/publication/create')">
+          <button v-if="user && !currentRoute!.hideCreate" class="btn add" @click="router.push('/publication/create')">
             <img src="/icons/add.svg" alt="add" />
             Создать запись
           </button>
@@ -245,7 +268,7 @@ const currentRoute = computed(() => {
     & > .user-title {
       display: flex;
       flex-direction: column;
-      gap: 0;
+      gap: 2px;
 
       & > .username {
         @include main-text;

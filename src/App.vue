@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import Spinner from '@/components/UI/Spinner.vue'
 import { useAppInit } from '@/composables/useAppInit.ts'
 import { computed, onMounted } from 'vue'
 import AppHeader from '@/components/Layout/AppHeader.vue'
@@ -7,7 +6,7 @@ import { useRoute } from 'vue-router'
 import Notification from '@/components/UI/Notification.vue'
 import AppSidebar from '@/components/Layout/AppSidebar.vue'
 
-const { isAppReady, initApp } = useAppInit()
+const { initApp } = useAppInit()
 const route = useRoute()
 
 const hideHeader = computed(() => {
@@ -20,17 +19,14 @@ onMounted(async () => {
 </script>
 
 <template>
-  <Spinner v-if="!isAppReady" :style="{ height: '100vh' }" />
+  <AppHeader v-if="!hideHeader" />
 
-  <template v-else>
-    <AppHeader v-if="!hideHeader" />
-    <div class="main-content">
-      <AppSidebar v-if="!hideHeader" />
-      <div class="page-view" :class="{ 'default': hideHeader }">
-        <RouterView />
-      </div>
+  <div class="main-content">
+    <AppSidebar v-if="!hideHeader" />
+    <div class="page-view" :class="{ default: hideHeader }">
+      <RouterView />
     </div>
-  </template>
+  </div>
 
   <Notification />
 </template>

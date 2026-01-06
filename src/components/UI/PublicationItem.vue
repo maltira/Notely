@@ -3,10 +3,7 @@ import type { UserEntity } from '@/types/user.entity.ts'
 import { useUserStore } from '@/stores/user.store.ts'
 import { storeToRefs } from 'pinia'
 import { onMounted, onUnmounted, ref } from 'vue'
-import type {
-  PublicationCategories,
-  PublicationCategoriesRequest,
-} from '@/types/category.entity.ts'
+import type { PublicationCategories, PublicationCategoriesRequest } from '@/types/category.entity.ts'
 import DeleteModal from '@/components/Modals/DeleteModal.vue'
 import router from '@/router'
 
@@ -38,17 +35,12 @@ const emit = defineEmits<{
   toggleCategoryPicker: [category: PublicationCategoriesRequest, id: string]
 
   openModal: [id: string]
-  deleted: []
 }>()
 
 const handleHover = (e: MouseEvent) => {
   const publication_container = document.getElementById('publication_container')
   const publication_content = document.getElementById('publication_content')
-  if (
-    publication_container?.contains(e.target as Node) &&
-    !publication_content?.contains(e.target as Node) &&
-    props.isViewMode
-  ) {
+  if (publication_container?.contains(e.target as Node) && !publication_content?.contains(e.target as Node) && props.isViewMode) {
     publication_container?.classList.add('view-mode-background')
   } else {
     publication_container?.classList.remove('view-mode-background')
@@ -57,11 +49,7 @@ const handleHover = (e: MouseEvent) => {
 const handleBackgroundClick = (e: MouseEvent) => {
   const publication_container = document.getElementById('publication_container')
   const publication_content = document.getElementById('publication_content')
-  if (
-    publication_container?.contains(e.target as Node) &&
-    !publication_content?.contains(e.target as Node) &&
-    props.isViewMode
-  ) {
+  if (publication_container?.contains(e.target as Node) && !publication_content?.contains(e.target as Node) && props.isViewMode) {
     emit('toggleBgPicker')
   } else {
     emit('closeBgPicker')
@@ -134,18 +122,8 @@ onUnmounted(() => {
       <p class="author-name">{{ author.name }}</p>
       <div class="actions" v-if="!isViewMode">
         <img v-if="user && author.id != user.id" src="/icons/add-circle.svg" alt="subscribe" />
-        <img
-          v-if="user && author.id === user.id"
-          @click="id ? editPub(id) : null"
-          src="/icons/edit-2.svg"
-          alt="edit"
-        />
-        <img
-          v-if="user && author.id === user.id"
-          @click="id ? toggleDeleteModal() : null"
-          src="/icons/delete.svg"
-          alt="edit"
-        />
+        <img v-if="user && author.id === user.id" @click="id ? editPub(id) : null" src="/icons/edit-2.svg" alt="edit" />
+        <img v-if="user && author.id === user.id" @click="id ? toggleDeleteModal() : null" src="/icons/delete.svg" alt="edit" />
       </div>
     </div>
   </div>
@@ -156,12 +134,6 @@ onUnmounted(() => {
     :author_id="author.id"
     :publication_title="title"
     @close="isDeleteModalOpen = false"
-    @deleted="
-      () => {
-        isDeleteModalOpen = false
-        emit('deleted')
-      }
-    "
   />
 </template>
 

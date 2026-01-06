@@ -7,11 +7,11 @@ import { tutorialService } from '@/api/tutorial.service.ts'
 export const useTutorialStore = defineStore('tutorial', {
   state: () => ({
     tutorials: [] as TutorialEntity[],
-    isLoading: false,
+    isLoading: true,
     error: null as string | null,
   }),
   actions: {
-    async fetchAllTutorials(): Promise<void> {
+    async fetchAllTutorials(): Promise<TutorialEntity[]> {
       try {
         this.isLoading = true
         this.error = null
@@ -20,12 +20,13 @@ export const useTutorialStore = defineStore('tutorial', {
 
         if (isErrorResponse(response)) {
           this.error = response.error
-          return
+          return []
         }
 
-        this.tutorials = response
+        return response
       } catch {
         this.error = 'Ошибка получения туториалов, повторите попытку'
+        return []
       } finally {
         this.isLoading = false
       }

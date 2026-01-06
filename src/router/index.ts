@@ -21,11 +21,13 @@ import FavoritesView from '@/views/publication/FavoritesView.vue'
 import AboutView from '@/views/AboutView.vue'
 import AuthorsView from '@/views/AuthorsView.vue'
 import SubscriptionsView from '@/views/SubscriptionsView.vue'
+import { useAuthStore } from '@/stores/auth.store.ts'
 
 const checkAuth = async (to: RouteLocationNormalizedGeneric, from: RouteLocationNormalizedLoadedGeneric, next: NavigationGuardNext) => {
-  const userStore = useUserStore()
-  await userStore.fetchCurrentUser()
-  if (userStore.user) {
+  const authStore = useAuthStore()
+  const res = await authStore.checkAuth()
+
+  if (res && res.user) {
     next()
   } else {
     next('/login')
@@ -37,14 +39,6 @@ const routes: RouteRecordRaw[] = [
     path: '/',
     name: 'Publications',
     component: Publications,
-    children: [
-      {
-        path: '/pub/edit/:id',
-        component: Publications,
-        name: 'PublicationEdit',
-        props: true,
-      },
-    ],
   },
   {
     path: '/publication/create',

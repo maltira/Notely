@@ -9,9 +9,10 @@ import DeleteModal from '@/components/Modals/DeleteModal.vue'
 import router from '@/router'
 import { useUserStore } from '@/stores/user.store.ts'
 import { formatDate } from '@/utils/date_format.ts'
+import { useFavoritesStore } from '@/stores/favorite.store.ts'
 
 interface Props {
-  pub_id: string
+  pub: PublicationEntity
 }
 const props = defineProps<Props>()
 const emit = defineEmits<{
@@ -38,11 +39,14 @@ const { infoNotification } = useNotification()
 
 const userStore = useUserStore()
 const { user } = storeToRefs(userStore)
+
 const publicationStore = usePublicationStore()
 const { error } = storeToRefs(publicationStore)
-const { fetchPublication, checkFavorite, UpdateFavorite } = publicationStore
 
-const publication = ref<PublicationEntity | null>(null)
+const favoriteStore = useFavoritesStore()
+const { updateFavorite } = favoriteStore
+const { favorites } = storeToRefs(favoriteStore)
+
 const isFavorite = ref<boolean>(false)
 
 const isDeleteModalOpen = ref<boolean>(false)
@@ -57,23 +61,20 @@ const editPub = (id: string) => {
 const changeFavorite = async () => {
   isFavorite.value = !isFavorite.value
 
-  await UpdateFavorite(props.pub_id, isFavorite.value)
+  await updateFavorite(props.pub.id, isFavorite.value)
 
   if (error.value) {
     infoNotification('❌ ' + error.value)
-  } else{
-    infoNotification(isFavorite.value ? "Публикация сохранена в избранное" : "Публикация удалена из избранного")
+  } else {
+    if (isFavorite.value) favorites.value.push(props.pub)
+    else favorites.value = favorites.value.filter((p) => p.id !== props.pub.id)
+    infoNotification(isFavorite.value ? 'Публикация сохранена в избранное' : 'Публикация удалена из избранного')
   }
 }
 
 onMounted(async () => {
   const pub_modal_container = document.getElementById('pub_modal_container')
   const pub_modal_content = document.getElementById('pub_modal_content')
-
-  publication.value = await fetchPublication(props.pub_id)
-  if (error.value) {
-    infoNotification('❌ ' + error.value)
-  }
 
   if (pub_modal_container && pub_modal_content) {
     setTimeout(() => {
@@ -82,59 +83,51 @@ onMounted(async () => {
     }, 1)
   }
 
-  isFavorite.value = await checkFavorite(props.pub_id)
+  isFavorite.value = favorites.value.find((p) => p.id === props.pub.id) !== undefined
 })
 </script>
 
 <template>
-  <div
-    id="pub_modal_container"
-    class="pub_modal_container"
-    :style="{ background: publication ? publication.background_color : '#f6f6f6' }"
-  >
+  <div id="pub_modal_container" class="pub_modal_container" :style="{ background: pub ? pub.background_color : '#f6f6f6' }">
     <div id="pub_modal_content" class="content">
       <div class="main_content">
-        <div v-if="publication" class="header-block">
+        <div v-if="pub" class="header-block">
           <div class="categories">
             <div
-              v-if="publication.PublicationCategories.length > 0"
+              v-if="pub.PublicationCategories.length > 0"
               class="category-item"
-              v-for="el in publication.PublicationCategories"
+              v-for="el in pub.PublicationCategories"
               :style="{ background: el.background_color, color: el.text_color }"
             >
               {{ el.Category.name }}
             </div>
             <div v-else class="category-item">Категории не указаны</div>
           </div>
-          <h1>{{ publication.title || 'Заголовок не указан' }}</h1>
+          <h1>{{ pub.title || 'Заголовок не указан' }}</h1>
           <p>
-            {{ publication.created_at ? formatDate(publication.created_at, 'DD/MM/YYYY HH:mm') : 'Дата публикации не указана' }}
+            {{ pub.created_at ? formatDate(pub.created_at, 'DD/MM/YYYY HH:mm') : 'Дата публикации не указана' }}
           </p>
         </div>
-        <p v-if="publication" class="description">
-          {{ publication.description || 'Описание не указано' }}
+        <p v-if="pub" class="description">
+          {{ pub.description || 'Описание не указано' }}
         </p>
         <div class="close-btn" @click="handleClose">
           <img src="/icons/close.svg" alt="close" width="24px" />
         </div>
       </div>
-      <div class="footer_content" v-if="publication">
-        <button class="author">{{ publication.User.name }}</button>
+      <div class="footer_content" v-if="pub">
+        <button class="author">{{ pub.User.name }}</button>
         <div class="actions">
-          <div class="action-item" v-if="user && publication.User.id !== user.id">
+          <div class="action-item" v-if="user && pub.User.id !== user.id">
             <img src="/icons/add-circle.svg" alt="add" />
           </div>
-          <div class="action-item" v-if="user && !publication.is_draft" @click="changeFavorite">
-            <img :src="isFavorite ? 'icons/saved-fill.svg' : '/icons/saved-outline.svg'" alt="saved" />
+          <div class="action-item" v-if="user && !pub.is_draft" @click="changeFavorite">
+            <img :src="isFavorite ? '/icons/saved-fill.svg' : '/icons/saved-outline.svg'" alt="saved" />
           </div>
-          <div
-            v-if="user && publication && user.id === publication.User.id"
-            class="action-item"
-            @click="publication ? editPub(publication.id) : null"
-          >
+          <div v-if="user && pub && user.id === pub.User.id" class="action-item" @click="pub ? editPub(pub.id) : null">
             <img src="/icons/edit-2.svg" alt="edit" />
           </div>
-          <div v-if="user && publication && user.id === publication.User.id" class="action-item" @click="toggleDeleteModal">
+          <div v-if="user && pub && user.id === pub.User.id" class="action-item" @click="toggleDeleteModal">
             <img src="/icons/delete.svg" alt="delete" />
           </div>
         </div>
@@ -143,12 +136,11 @@ onMounted(async () => {
   </div>
 
   <DeleteModal
-    v-if="isDeleteModalOpen && publication"
-    :publication_id="publication.id"
-    :author_id="publication.User.id"
-    :publication_title="publication.title"
+    v-if="isDeleteModalOpen && pub"
+    :publication_id="pub.id"
+    :author_id="pub.User.id"
+    :publication_title="pub.title"
     @close="handleClose"
-    @deleted="handleClose"
   />
 </template>
 

@@ -1,30 +1,30 @@
 <script setup lang="ts">
 import { useUserStore } from '@/stores/user.store.ts'
 import { storeToRefs } from 'pinia'
-import { computed, onMounted, ref } from 'vue'
+import { computed, ref } from 'vue'
 import Skeleton from '@/components/UI/Skeleton.vue'
 import { useSubscriptionStore } from '@/stores/subscription.store.ts'
 import { useNotification } from '@/composables/useNotification.ts'
-import type { SubscriptionEntity } from '@/types/subscription.entity.ts'
+import type { UserEntity } from '@/types/user.entity.ts'
 
 // ? Уведомления
 const { infoNotification } = useNotification()
 
 // ? subscriptionStore
 const subscriptionStore = useSubscriptionStore()
-const { error } = storeToRefs(subscriptionStore)
-const { updateSubscription, fetchAllUserSubscriptions, fetchAllUserSubscribers } = subscriptionStore
+const { userSubscribers, userSubscriptions, error, isLoading: subLoading } = storeToRefs(subscriptionStore)
+const { updateSubscription } = subscriptionStore
 
 // ? userStore
 const userStore = useUserStore()
-const { user, users, isLoading } = storeToRefs(userStore)
-const { fetchAllUsers } = userStore
+const { user, users, isLoading: userLoading } = storeToRefs(userStore)
+
+const isLoading = computed(() => {
+  return userLoading.value || subLoading.value
+})
 
 const search = ref<string>('')
 const isSearchOpen = ref(false)
-
-const subscribers = ref<SubscriptionEntity[]>([])
-const subscriptions = ref<SubscriptionEntity[]>([])
 
 const toggleSearch = () => {
   const searchInput = document.getElementById('search-users')
@@ -54,35 +54,36 @@ const allUsers = computed(() => {
 })
 
 const isMySubscription = (targetID: string): boolean => {
-  return subscriptions.value.find((s) => s.target_id === targetID) !== undefined
+  return userSubscriptions.value.find((s) => s.target_id === targetID) !== undefined
 }
 const isMySubscriber = (userID: string): boolean => {
-  return subscribers.value.find((s) => s.user_id === userID) !== undefined
+  return userSubscribers.value.find((s) => s.user_id === userID) !== undefined
 }
 
-const updateSub = async (targetID: string) => {
-  const currentFlag = isMySubscription(targetID)
+const updateSub = async (targetUser: UserEntity) => {
+  const currentFlag = isMySubscription(targetUser.id)
 
-  await updateSubscription(targetID, !currentFlag)
+  await updateSubscription(targetUser.id, !currentFlag)
 
   if (error.value) {
     infoNotification('❌ ' + error.value)
+  } else {
+    if (!currentFlag) {
+      userSubscriptions.value.push({
+        id: '',
+        user_id: user.value!.id,
+        target_id: targetUser.id,
+        created_at: new Date(),
+        TargetUser: targetUser,
+        SubscriberUser: null,
+      })
+    } else {
+      userSubscriptions.value = userSubscriptions.value.filter(
+        (s) => s.user_id !== user.value!.id && s.target_id !== targetUser.id,
+      )
+    }
   }
-
-  await getDataSubs()
 }
-
-const getDataSubs = async () => {
-  if (user.value) {
-    subscriptions.value = (await fetchAllUserSubscriptions(user.value.id)) || []
-    subscribers.value = (await fetchAllUserSubscribers(user.value.id)) || []
-  }
-}
-
-onMounted(async () => {
-  await fetchAllUsers()
-  await getDataSubs()
-})
 </script>
 
 <template>
@@ -101,13 +102,11 @@ onMounted(async () => {
       <img src="/icons/search.svg" alt="add" />
       <input id="search-users" placeholder="Поиск по пользователям" type="text" @blur="isSearchOpen = false" v-model="search" />
     </form>
+
     <div class="userlist_block skeleton" v-if="isLoading">
-      <Skeleton height="60px" border-radius="12px" />
-      <Skeleton height="60px" border-radius="12px" />
-      <Skeleton height="60px" border-radius="12px" />
-      <Skeleton height="60px" border-radius="12px" />
+      <Skeleton height="60px" border-radius="12px" v-for="i in 12" :key="i"/>
     </div>
-    <div class="userlist_block" v-if="allUsers.length > 0">
+    <div class="userlist_block" v-else-if="allUsers.length > 0">
       <div v-for="u in allUsers" class="user-item">
         <div class="user-info">
           <img class="avatar-preview" v-if="u.avatar" :src="`/img/avatars/${u.avatar}`" alt="avatar" />
@@ -121,7 +120,7 @@ onMounted(async () => {
           <button
             v-if="user && u.id !== user.id"
             class="subscribe"
-            @click="updateSub(u.id)"
+            @click="updateSub(u)"
             :class="{ dark: !isMySubscription(u.id) }"
           >
             {{ isMySubscription(u.id) ? 'Вы подписаны' : 'Подписаться' }}
@@ -130,7 +129,8 @@ onMounted(async () => {
         </div>
       </div>
     </div>
-    <p class="not-found" v-else-if="!isLoading">Ничего не найдено</p>
+
+    <p class="not-found" v-else>Ничего не найдено</p>
   </div>
 </template>
 

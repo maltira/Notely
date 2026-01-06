@@ -9,8 +9,7 @@ import type { CreateUserRequest, UserEntity } from '@/types/user.entity.ts'
 export const useAuthStore = defineStore('auth', {
   state: () => ({
     token: null as string | null,
-    isAuthenticated: false,
-    isLoading: false,
+    isLoading: true,
     error: null as string | null,
   }),
   actions: {
@@ -35,9 +34,6 @@ export const useAuthStore = defineStore('auth', {
           return null
         }
 
-
-        // Удачно получили пользователя
-        this.isAuthenticated = true
         this.token = response.token
 
         // Возвращаем только AuthResponse
@@ -86,7 +82,6 @@ export const useAuthStore = defineStore('auth', {
         await authService.logout()
 
         // Обнуляем пользователя при любом ответе (200, 401)
-        this.isAuthenticated = false
         this.token = null
         userStore.user = null
         userStore.searchQuery = null
@@ -114,7 +109,6 @@ export const useAuthStore = defineStore('auth', {
         // Пришла ошибка (401)
         if (isErrorResponse(response)) {
           this.error = response.error
-          this.isAuthenticated = false
           return null
         }
 
@@ -123,7 +117,6 @@ export const useAuthStore = defineStore('auth', {
       }
       catch {
         this.error = "Ошибка проверки авторизации, повторите попытку"
-        this.isAuthenticated = false
         return null
       }
       finally {

@@ -6,11 +6,14 @@ import { subscriptionService } from '@/api/subscription.service.ts'
 
 export const useSubscriptionStore = defineStore('subscription', {
   state: () => ({
-    isLoading: false,
+    userSubscriptions: [] as SubscriptionEntity[],
+    userSubscribers: [] as SubscriptionEntity[],
+
+    isLoading: true,
     error: null as string | null,
   }),
   actions: {
-    async fetchAllUserSubscriptions(userID: string): Promise<SubscriptionEntity[] | null> {
+    async fetchAllUserSubscriptions(userID: string): Promise<SubscriptionEntity[]> {
       try {
         this.isLoading = true
         this.error = null
@@ -19,18 +22,18 @@ export const useSubscriptionStore = defineStore('subscription', {
 
         if (isErrorResponse(response)) {
           this.error = response.error
-          return null
+          return []
         }
 
         return response
       } catch {
         this.error = 'Ошибка получения подписок, повторите попытку'
-        return null
+        return []
       } finally {
         this.isLoading = false
       }
     },
-    async fetchAllUserSubscribers(userID: string): Promise<SubscriptionEntity[] | null> {
+    async fetchAllUserSubscribers(userID: string): Promise<SubscriptionEntity[]> {
       try {
         this.isLoading = true
         this.error = null
@@ -39,13 +42,13 @@ export const useSubscriptionStore = defineStore('subscription', {
 
         if (isErrorResponse(response)) {
           this.error = response.error
-          return null
+          return []
         }
 
         return response
       } catch {
         this.error = 'Ошибка получения подписчиков, повторите попытку'
-        return null
+        return []
       } finally {
         this.isLoading = false
       }
@@ -70,7 +73,6 @@ export const useSubscriptionStore = defineStore('subscription', {
     },
     async updateSubscription(targetID: string, isSubscribe: boolean): Promise<void> {
       try {
-        this.isLoading = true
         this.error = null
 
         const response: MessageResponse | ErrorResponse = await subscriptionService.updateSubscription(targetID, isSubscribe)
@@ -81,8 +83,6 @@ export const useSubscriptionStore = defineStore('subscription', {
         }
       } catch {
         this.error = 'Ошибка обновления подписки, повторите попытку'
-      } finally {
-        this.isLoading = false
       }
     },
   },
