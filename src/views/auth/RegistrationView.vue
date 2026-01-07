@@ -6,6 +6,9 @@ import { useNotification } from '@/composables/useNotification.ts'
 import { useRouter } from 'vue-router'
 import Spinner from '@/components/UI/Spinner.vue'
 import type { CreateUserRequest } from '@/types/user.entity.ts'
+import { useAppInit } from '@/composables/useAppInit.ts'
+
+const { initApp } = useAppInit()
 
 const router = useRouter()
 const name = ref('')
@@ -32,12 +35,11 @@ const registrationUser = async () => {
       infoNotification('Ошибка: ' + error.value.toString())
     } else {
       await router.push('/greeting')
+      await initApp()
       infoNotification('👋 Успешная регистрация, добро пожаловать в Notely!')
     }
   } else {
-    infoNotification(
-      'Указаны неверные данные, возможно вы указали не все поля либо пароли не совпадают',
-    )
+    infoNotification('Указаны неверные данные, возможно вы указали не все поля либо пароли не совпадают')
   }
 }
 

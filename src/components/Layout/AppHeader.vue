@@ -92,7 +92,7 @@ const goToHome = () => {
 
 const goToLogout = async () => {
   await router.push('/login')
-  await logout()
+  if (user.value) await logout()
 }
 
 const currentRoute = computed(() => {

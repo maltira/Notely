@@ -15,6 +15,7 @@ export function useAppInit() {
 
   const initApp = async (): Promise<void> => {
     try {
+      resetData()
       const authStore = useAuthStore()
       const auth: AuthResponse | null = await authStore.checkAuth()
 
@@ -73,6 +74,7 @@ const initCurrentUser = async (id: string) => {
     console.error('Ошибка инициализации данных пользователя:', error)
   }
 }
+
 const initGeneralData = async () => {
   try {
     const publicationStore = usePublicationStore()
@@ -105,4 +107,26 @@ const initGeneralData = async () => {
   catch (error) {
     console.error('Ошибка инициализации общих данных:', error)
   }
+}
+
+const resetData = () => {
+  const publicationStore = usePublicationStore()
+  const categoriesStore = useCategoriesStore()
+  const tutorialStore = useTutorialStore()
+  const pubViewStore = usePubViewStore()
+  const userStore = useUserStore()
+  const subscriptionStore = useSubscriptionStore()
+  const favoriteStore = useFavoritesStore()
+
+  pubViewStore.initializeView()
+  tutorialStore.tutorials = []
+  categoriesStore.categories = null
+  publicationStore.publications = []
+  userStore.users = []
+
+  publicationStore.userPublications = []
+  publicationStore.userDrafts = []
+  favoriteStore.favorites = []
+  subscriptionStore.userSubscriptions = []
+  subscriptionStore.userSubscribers = []
 }

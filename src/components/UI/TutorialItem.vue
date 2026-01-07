@@ -1,5 +1,7 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
+import Skeleton from '@/components/UI/Skeleton.vue'
+import router from '@/router'
 
 interface Props {
   tutorial_type: string
@@ -14,6 +16,8 @@ const emit = defineEmits<{
   toggleSettings: []
   newPublication: []
 }>()
+
+const imgLoading = ref(true)
 
 const buttonContent = computed(() => {
   switch (props.tutorial_type) {
@@ -30,7 +34,8 @@ const buttonContent = computed(() => {
 <template>
   <div class="tutorial-item">
     <div class="main-content">
-      <img :src="'/img/' + img" alt="img" />
+      <Skeleton width="100%" height="116px" border-radius="4px" v-if="imgLoading" style="opacity: 0.3;" />
+      <img :src="'/img/' + img" alt="img" v-on:load="imgLoading = false" />
       <div class="main_info-content">
         <div class="header">
           <div class="example-time">
@@ -44,7 +49,7 @@ const buttonContent = computed(() => {
     </div>
     <div class="divider"></div>
     <div class="footer-content">
-      <button class="more-info">
+      <button class="more-info" @click="router.push('/about')">
         Узнать больше
         <img src="/icons/arr-black.svg" alt="arr" />
       </button>

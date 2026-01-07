@@ -7,6 +7,9 @@ import { useNotification } from '@/composables/useNotification.ts'
 import { useRouter } from 'vue-router'
 import Spinner from '@/components/UI/Spinner.vue'
 import { useUserStore } from '@/stores/user.store.ts'
+import { useAppInit } from '@/composables/useAppInit.ts'
+
+const { initApp } = useAppInit()
 
 const authStore = useAuthStore()
 const userStore = useUserStore()
@@ -32,6 +35,7 @@ const auth = async () => {
       infoNotification('Ошибка: ' + error.value.toString())
     } else {
       await router.push('/')
+      await initApp()
       infoNotification(`👋 ${user.value!.name}, рады приветствовать тебя в Notely!`)
     }
   } else {
@@ -129,7 +133,14 @@ onMounted(() => {
             <Spinner size="small" v-if="isLoading" />
             <img v-if="!isLoading" src="/icons/arr-white.svg" alt="arrow" />
           </button>
-          <button class="continue" @click="router.push('/')" :class="{ disabled: isLoading }">
+          <button
+            class="continue"
+            @click="() => {
+              initApp()
+              router.push('/')
+            }"
+            :class="{ disabled: isLoading }"
+          >
             Продолжить как читатель
           </button>
         </div>

@@ -20,7 +20,7 @@ const userStore = useUserStore()
 const { user, users, isLoading: userLoading } = storeToRefs(userStore)
 
 const isLoading = computed(() => {
-  return userLoading.value || subLoading.value
+  return userLoading.value || subLoading.value && user.value
 })
 
 const search = ref<string>('')
